@@ -1,38 +1,201 @@
-.App {
-  text-align: center;
-}
-
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
+.app-shell {
   min-height: 100vh;
+  padding: 40px 0 56px;
+  background:
+    radial-gradient(circle at top left, rgba(216, 181, 128, 0.28), transparent 34%),
+    radial-gradient(circle at top right, rgba(24, 37, 71, 0.18), transparent 28%),
+    linear-gradient(180deg, #f7f1e8 0%, #ece0d1 48%, #e2d2bf 100%);
+}
+
+.app-container {
+  position: relative;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+  gap: 24px;
+  align-items: stretch;
+  margin-bottom: 28px;
+}
+
+.hero-chip,
+.list-chip {
+  align-self: flex-start;
+  background: rgba(39, 45, 52, 0.08) !important;
+  color: #2f2a24 !important;
+  font-weight: 700 !important;
+}
+
+.hero-title {
+  font-weight: 800 !important;
+  letter-spacing: -0.04em !important;
+  color: #201913;
+}
+
+.hero-subtitle {
+  max-width: 620px;
+  color: rgba(32, 25, 19, 0.72);
+  font-size: 1.02rem !important;
+  line-height: 1.7 !important;
+}
+
+.hero-panel {
+  border-radius: 28px !important;
+  padding: 28px !important;
+  background: rgba(255, 255, 255, 0.52) !important;
+  border: 1px solid rgba(61, 41, 23, 0.1) !important;
+  box-shadow: 0 24px 60px rgba(63, 44, 26, 0.12) !important;
+  backdrop-filter: blur(14px);
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
 }
 
-.App-link {
-  color: #61dafb;
+.hero-panel-label,
+.hero-panel-text,
+.section-caption,
+.book-author,
+.empty-state p {
+  color: rgba(32, 25, 19, 0.72);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.hero-panel-number {
+  font-weight: 800 !important;
+  color: #221a14;
+  letter-spacing: -0.05em !important;
+  margin: 8px 0 !important;
+}
+
+.content-grid {
+  align-items: stretch;
+}
+
+.section-card {
+  height: 100%;
+  border-radius: 28px !important;
+  padding: 26px !important;
+  background: rgba(255, 248, 240, 0.72) !important;
+  border: 1px solid rgba(61, 41, 23, 0.08) !important;
+  box-shadow: 0 20px 52px rgba(63, 44, 26, 0.1) !important;
+  backdrop-filter: blur(14px);
+}
+
+.section-header {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-weight: 750 !important;
+  color: #211913;
+}
+
+.form-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.form-stack .MuiTextField-root .MuiOutlinedInput-root {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 16px;
+}
+
+.form-stack .MuiTextField-root .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(61, 41, 23, 0.12);
+}
+
+.form-stack .MuiTextField-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(61, 41, 23, 0.28);
+}
+
+.form-stack .MuiTextField-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #8a5c2f;
+  border-width: 2px;
+}
+
+.submit-button {
+  min-height: 52px;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #6e4521 0%, #8a5c2f 48%, #a87442 100%) !important;
+  box-shadow: 0 18px 30px rgba(110, 69, 33, 0.22) !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+}
+
+.submit-button:hover {
+  filter: brightness(1.02);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.books-stack {
+  margin-top: 20px;
+}
+
+.section-divider {
+  border-color: rgba(61, 41, 23, 0.1) !important;
+}
+
+.book-card {
+  border-radius: 20px !important;
+  border-color: rgba(61, 41, 23, 0.1) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+.book-card-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.book-title {
+  font-weight: 700 !important;
+  color: #221a14;
+}
+
+.book-tags .MuiChip-root {
+  background: rgba(110, 69, 33, 0.08);
+  color: #5f3b1d;
+  font-weight: 700;
+}
+
+.empty-state {
+  padding: 36px 20px;
+  text-align: center;
+  border-radius: 22px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 248, 240, 0.82));
+  border: 1px dashed rgba(61, 41, 23, 0.18);
+}
+
+@media (max-width: 900px) {
+  .hero {
+    grid-template-columns: 1fr;
   }
-  to {
-    transform: rotate(360deg);
+
+  .book-card-content,
+  .list-header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    padding-top: 20px;
+  }
+
+  .hero-title {
+    font-size: clamp(2rem, 9vw, 3rem) !important;
+  }
+
+  .section-card,
+  .hero-panel {
+    border-radius: 22px !important;
+    padding: 20px !important;
   }
 }

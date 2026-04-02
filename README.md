@@ -1,4 +1,4 @@
-# Biblioteca 
+# Biblioteca
 
 Aplicação simples para cadastro e listagem de livros integrando banco de dados com frontend e backend, desenvolvido em conjunto com os conhecimentos adquiridos na disciplina Implementação de Banco de Dados, e o sistema é dividido em duas partes:
 
@@ -25,7 +25,7 @@ Aplicação simples para cadastro e listagem de livros integrando banco de dados
 - Node.js e npm instalados.
 - MongoDB rodando localmente.
 
-O backend usa a base `BibliotecaDigital` em `mongodb://localhost:27017/BibliotecaDigital`.
+O backend usa a base `BibliotecaDigital` em `mongodb://127.0.0.1:27017/BibliotecaDigital`.
 
 ## Estrutura dos dados
 
@@ -58,7 +58,7 @@ npm install
 npm start
 ```
 
-O React normalmente roda em `http://localhost:3001` quando a porta 3000 já está ocupada pelo backend.
+Se a porta 3000 estiver ocupada pelo backend, o React normalmente solicita outra porta disponível, geralmente `3001`.
 
 ## API
 
@@ -85,3 +85,4 @@ Exemplo de corpo da requisição:
 
 - O frontend consome a API em `http://localhost:3000/livros`.
 - Se o MongoDB não estiver ativo, o backend não conseguirá salvar ou carregar os livros.
+- O backend atual expõe apenas as rotas `GET /livros` e `POST /livros`.
