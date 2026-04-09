@@ -4,6 +4,12 @@ const cors = require('cors');
 const path = require('path');
 const app = express();
 
+// Em producao (Railway), as vars vem do ambiente. Localmente, tenta carregar .env.
+try {
+    require('dotenv').config({ path: path.join(__dirname, '.env') });
+} catch (_) {
+    // dotenv e opcional em runtime; segue com variaveis de ambiente do provedor.
+}
 
 app.use(express.json());
 app.use(cors({
@@ -11,15 +17,17 @@ app.use(cors({
 }));
 
 // Conexão com MongoDB
-require('dotenv').config({ path: path.join(__dirname, '.env') });
 mongoose.set('bufferCommands', false);
-
-mongoose.connect(process.env.MONGODB_URI, {
-    serverSelectionTimeoutMS: 5000,
-    dbName: 'Livro'
-})
-    .then(() => console.log('MongoDB conectado com sucesso'))
-    .catch((error) => console.error('Erro ao conectar no MongoDB:', error.message));
+if (!process.env.MONGODB_URI) {
+    console.error('MONGODB_URI nao definido. Configure a variavel no Railway.');
+} else {
+    mongoose.connect(process.env.MONGODB_URI, {
+        serverSelectionTimeoutMS: 5000,
+        dbName: 'Livro'
+    })
+        .then(() => console.log('MongoDB conectado com sucesso'))
+        .catch((error) => console.error('Erro ao conectar no MongoDB:', error.message));
+}
 
 function isDatabaseConnected() {
     return mongoose.connection.readyState === 1;
