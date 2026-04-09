@@ -18,6 +18,23 @@ import './App.css';
 
 const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
+const formatarDataCadastro = (dataCadastro) => {
+  if (!dataCadastro) {
+    return 'Data de cadastro indisponivel';
+  }
+
+  const data = new Date(dataCadastro);
+
+  if (Number.isNaN(data.getTime())) {
+    return 'Data de cadastro indisponivel';
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(data);
+};
 
 
 function App() {
@@ -43,6 +60,21 @@ function App() {
       body: JSON.stringify(form)
     });
     setForm({ titulo: '', autor: '', ano: '', genero: '' });
+    const res = await fetch(`${API_BASE_URL}/livros`);
+    setLivros(await res.json());
+  };
+
+  const excluirLivro = async (id) => {
+    const confirmarExclusao = window.confirm('Excluir este livro permanentemente?');
+
+    if (!confirmarExclusao) {
+      return;
+    }
+
+    await fetch(`${API_BASE_URL}/livros/${id}`, {
+      method: 'DELETE',
+    });
+
     const res = await fetch(`${API_BASE_URL}/livros`);
     setLivros(await res.json());
   };
@@ -162,8 +194,22 @@ function App() {
                   </Box>
                 ) : (
                   livros.map((livro, index) => (
-                    <Card key={index} className="book-card" variant="outlined">
+                    <Card key={livro._id || index} className="book-card" variant="outlined">
                       <CardContent className="book-card-content">
+                        <Box className="book-actions">
+                          <Box className="book-date-badge">
+                            adicionado em {formatarDataCadastro(livro.dataCadastro)}
+                          </Box>
+                          <Button
+                            variant="text"
+                            size="small"
+                            color="error"
+                            className="book-delete-button"
+                            onClick={() => excluirLivro(livro._id)}
+                          >
+                            excluir
+                          </Button>
+                        </Box>
                         <Box className="book-main">
                           <Typography variant="h6" className="book-title">
                             {livro.titulo}

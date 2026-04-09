@@ -39,6 +39,7 @@ Cada livro possui os campos abaixo:
 - `autor`
 - `ano`
 - `genero`
+- `dataCadastro`
 
 ## Como executar localmente
 
@@ -113,6 +114,7 @@ Retorna todos os livros cadastrados.
 ### `POST /livros`
 
 Cria um novo livro.
+O campo `dataCadastro` é preenchido automaticamente no momento do salvamento.
 
 Exemplo de corpo da requisição:
 

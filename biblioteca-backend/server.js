@@ -52,7 +52,11 @@ const Livro = mongoose.model('Livro', {
     titulo: String,
     autor: String,
     ano: Number,
-    genero: String
+    genero: String,
+    dataCadastro: {
+        type: Date,
+        default: Date.now
+    }
 });
 
 
@@ -74,6 +78,20 @@ app.post('/livros', ensureDatabaseConnection, async (req, res) => {
         res.json(novoLivro);
     } catch (error) {
         res.status(500).json({ erro: 'Erro ao salvar livro.' });
+    }
+});
+
+app.delete('/livros/:id', ensureDatabaseConnection, async (req, res) => {
+    try {
+        const livroRemovido = await Livro.findByIdAndDelete(req.params.id);
+
+        if (!livroRemovido) {
+            return res.status(404).json({ erro: 'Livro nao encontrado.' });
+        }
+
+        res.json({ mensagem: 'Livro removido com sucesso.' });
+    } catch (error) {
+        res.status(500).json({ erro: 'Erro ao excluir livro.' });
     }
 });
 

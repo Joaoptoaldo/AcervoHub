@@ -282,6 +282,7 @@
 }
 
 .book-card {
+  position: relative;
   border-radius: 20px !important;
   border-color: rgba(61, 41, 23, 0.1) !important;
   background: rgba(255, 255, 255, 0.72) !important;
@@ -295,10 +296,16 @@
 }
 
 .book-card-content {
+  position: relative;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   gap: 16px;
   align-items: flex-start;
+  padding-top: 18px !important;
+}
+
+.book-main {
+  padding-right: 170px;
 }
 
 .book-title {
@@ -316,6 +323,47 @@
   color: #5f3b1d;
   font-weight: 700;
   transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.book-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.book-date-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: rgba(110, 69, 33, 0.08);
+  color: #6b4320;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  white-space: nowrap;
+}
+
+.book-date-badge:hover {
+  background: rgba(110, 69, 33, 0.14);
+}
+
+.book-delete-button {
+  min-width: 0 !important;
+  padding: 2px 8px !important;
+  border-radius: 999px !important;
+  font-size: 0.72rem !important;
+  line-height: 1 !important;
+  text-transform: lowercase !important;
+}
+
+.book-delete-button:hover {
+  background: rgba(211, 47, 47, 0.08) !important;
 }
 
 .book-tags .MuiChip-root:hover {
