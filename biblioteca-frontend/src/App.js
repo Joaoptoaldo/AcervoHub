@@ -1,4 +1,3 @@
-import React, { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -13,7 +12,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { useEffect, useState } from 'react';
 import './App.css';
+
+
+const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
 
 function App() {
@@ -23,7 +27,7 @@ function App() {
 
   // Carregar livros
   useEffect(() => {
-    fetch('http://localhost:3000/livros')
+    fetch(`${API_BASE_URL}/livros`)
       .then(res => res.json())
       .then(data => setLivros(data));
   }, []);
@@ -33,13 +37,13 @@ function App() {
   const adicionarLivro = async (event) => {
     event.preventDefault();
 
-    await fetch('http://localhost:3000/livros', {
+    await fetch(`${API_BASE_URL}/livros`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form)
     });
     setForm({ titulo: '', autor: '', ano: '', genero: '' });
-    const res = await fetch('http://localhost:3000/livros');
+    const res = await fetch(`${API_BASE_URL}/livros`);
     setLivros(await res.json());
   };
 
@@ -49,9 +53,17 @@ function App() {
         <Box className="hero">
           <Stack spacing={2}>
             <Chip label="AcervoHub" className="hero-chip" />
-            <Typography variant="h2" className="hero-title">
-              Biblioteca Digital
-            </Typography>
+            <Box className="hero-title-wrap">
+              <Box
+                component="img"
+                src={`${PUBLIC_URL}/bookmarks.svg`}
+                alt="Icone de livro"
+                className="hero-title-icon"
+              />
+              <Typography variant="h2" className="hero-title">
+                Biblioteca Digital
+              </Typography>
+            </Box>
             <Typography className="hero-subtitle">
               Cadastre e acompanhe livros em uma interface limpa, responsiva e direta ao ponto.
             </Typography>
@@ -74,9 +86,17 @@ function App() {
           <Grid item xs={12} md={5}>
             <Paper className="section-card form-card" elevation={0}>
               <Box className="section-header">
-                <Typography variant="h5" className="section-title">
-                  Novo livro
-                </Typography>
+                <Box className="section-title-wrap">
+                  <Box
+                    component="img"
+                    src={`${PUBLIC_URL}/newbook.svg`}
+                    alt="Icone de novo livro"
+                    className="section-title-icon"
+                  />
+                  <Typography variant="h5" className="section-title">
+                    Novo livro
+                  </Typography>
+                </Box>
                 <Typography className="section-caption">
                   Preencha os campos abaixo para adicionar um registro.
                 </Typography>
