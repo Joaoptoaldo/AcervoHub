@@ -356,7 +356,7 @@ function App() {
                   value={form.ano}
                   onChange={(event) => setForm({ ...form, ano: event.target.value })}
                   inputProps={{ min: 1, step: 1 }}
-                  helperText="Use ano positivo e selecione a era ao lado."
+                  helperText="Use ano positivo e selecione a era abaixo"
                   fullWidth
                 />
                 <TextField
@@ -381,7 +381,7 @@ function App() {
                   onChange={(event) => setForm({ ...form, descricao: event.target.value })}
                   multiline
                   minRows={3}
-                  helperText="Resumo livre sobre a obra (opcional)."
+                  helperText="Resumo livre sobre a obra (opcional)"
                   fullWidth
                 />
 
@@ -418,7 +418,7 @@ function App() {
                       dataLeitura: novoStatus === 'LIDO' ? form.dataLeitura : '',
                     });
                   }}
-                  helperText="Opcional. Se nao selecionar, sera considerado 'quero ler'."
+                  helperText="Opcional (se nao selecionar, sera considerado 'quero ler')"
                   fullWidth
                 >
                   <MenuItem value="">nao informar (quero ler)</MenuItem>
@@ -436,7 +436,7 @@ function App() {
                     value={form.dataLeitura}
                     onChange={(event) => setForm({ ...form, dataLeitura: event.target.value })}
                     InputLabelProps={{ shrink: true }}
-                    helperText="Opcional para status lido."
+                    helperText="Opcional para status lido"
                     fullWidth
                   />
                 ) : null}
@@ -467,9 +467,17 @@ function App() {
             <Paper className="section-card list-card" elevation={0}>
               <Box className="section-header list-header">
                 <Box>
-                  <Typography variant="h5" className="section-title">
-                    Acervo
-                  </Typography>
+                  <Box className="section-title-wrap">
+                    <Box
+                      component="img"
+                      src={`${PUBLIC_URL}/collection.svg`}
+                      alt="Icone de colecao"
+                      className="section-title-icon"
+                    />
+                    <Typography variant="h5" className="section-title">
+                      Acervo
+                    </Typography>
+                  </Box>
                   <Typography className="section-caption">
                     Lista dos livros já armazenados na base.
                   </Typography>
