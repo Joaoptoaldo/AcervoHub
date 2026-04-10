@@ -10,7 +10,7 @@ O sistema é dividido em duas partes:
 ## Funcionalidades
 
 - Listar livros cadastrados.
-- Cadastrar novos livros com título, autor, ano e gênero.
+- Cadastrar novos livros com título, autor, ano, era (a.C./d.C.) e gênero.
 - Persistir os dados em MongoDB Atlas.
 
 ## Tecnologias
@@ -38,6 +38,7 @@ Cada livro possui os campos abaixo:
 - `titulo`
 - `autor`
 - `ano`
+- `era` (`AC` para a.C. e `DC` para d.C.)
 - `genero`
 - `dataCadastro`
 
@@ -123,9 +124,15 @@ Exemplo de corpo da requisição:
 	"titulo": "Dom Casmurro",
 	"autor": "Machado de Assis",
 	"ano": 1899,
+	"era": "DC",
 	"genero": "Romance"
 }
 ```
+
+Regras de validacao do backend:
+
+- `ano` deve ser inteiro e maior ou igual a `1`.
+- `era` aceita apenas `AC` (antes de Cristo) ou `DC` (depois de Cristo).
 
 ## Observações
 

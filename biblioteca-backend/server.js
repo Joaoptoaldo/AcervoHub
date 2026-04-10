@@ -48,16 +48,54 @@ app.get('/', (req, res) => {
 });
 
 // Modelo Livro
-const Livro = mongoose.model('Livro', {
-    titulo: String,
-    autor: String,
-    ano: Number,
-    genero: String,
+const livroSchema = new mongoose.Schema({
+    titulo: {
+        type: String,
+        required: [true, 'Titulo e obrigatorio.'],
+        trim: true
+    },
+    autor: {
+        type: String,
+        required: [true, 'Autor e obrigatorio.'],
+        trim: true
+    },
+    ano: {
+        type: Number,
+        required: [true, 'Ano e obrigatorio.'],
+        min: [1, 'Ano deve ser maior ou igual a 1.'],
+        validate: {
+            validator: Number.isInteger,
+            message: 'Ano deve ser um numero inteiro.'
+        }
+    },
+    era: {
+        type: String,
+        enum: ['AC', 'DC'],
+        default: 'DC'
+    },
+    genero: {
+        type: String,
+        required: [true, 'Genero e obrigatorio.'],
+        trim: true
+    },
     dataCadastro: {
         type: Date,
         default: Date.now
     }
 });
+
+livroSchema.pre('validate', function () {
+    if (typeof this.ano === 'string') {
+        const anoParseado = Number.parseInt(this.ano, 10);
+        this.ano = Number.isNaN(anoParseado) ? this.ano : anoParseado;
+    }
+
+    if (typeof this.era === 'string') {
+        this.era = this.era.trim().toUpperCase();
+    }
+});
+
+const Livro = mongoose.model('Livro', livroSchema);
 
 
 // Rotas
@@ -77,6 +115,16 @@ app.post('/livros', ensureDatabaseConnection, async (req, res) => {
         await novoLivro.save();
         res.json(novoLivro);
     } catch (error) {
+        console.error('Erro ao salvar livro:', error);
+
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                erro: Object.values(error.errors)
+                    .map((item) => item.message)
+                    .join(' ')
+            });
+        }
+
         res.status(500).json({ erro: 'Erro ao salvar livro.' });
     }
 });

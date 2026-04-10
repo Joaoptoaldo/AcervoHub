@@ -1,4 +1,5 @@
 import {
+  Alert,
   Box,
   Button,
   Card,
@@ -7,12 +8,15 @@ import {
   Container,
   Divider,
   Grid,
+  MenuItem,
   Paper,
+  Skeleton,
+  Snackbar,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 
@@ -39,29 +43,84 @@ const formatarDataCadastro = (dataCadastro) => {
 
 function App() {
   const [livros, setLivros] = useState([]);
-  const [form, setForm] = useState({ titulo: '', autor: '', ano: '', genero: '' });
+  const [isLoading, setIsLoading] = useState(true);
+  const [feedback, setFeedback] = useState({
+    open: false,
+    severity: 'success',
+    message: '',
+  });
+  const [form, setForm] = useState({ titulo: '', autor: '', ano: '', era: 'DC', genero: '' });
+
+  const exibirFeedback = (message, severity = 'success') => {
+    setFeedback({ open: true, message, severity });
+  };
+
+  const fecharFeedback = () => {
+    setFeedback((estadoAtual) => ({ ...estadoAtual, open: false }));
+  };
+
+  const carregarLivros = useCallback(async ({ mostrarErro = false } = {}) => {
+    try {
+      const resposta = await fetch(`${API_BASE_URL}/livros`);
+
+      if (!resposta.ok) {
+        throw new Error('Falha ao buscar livros.');
+      }
+
+      const dados = await resposta.json();
+      setLivros(Array.isArray(dados) ? dados : []);
+    } catch (error) {
+      if (mostrarErro) {
+        exibirFeedback('Nao foi possivel atualizar o acervo agora.', 'error');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
 
   // Carregar livros
   useEffect(() => {
-    fetch(`${API_BASE_URL}/livros`)
-      .then(res => res.json())
-      .then(data => setLivros(data));
-  }, []);
+    carregarLivros({ mostrarErro: true });
+  }, [carregarLivros]);
 
   
   // Adicionar livro
   const adicionarLivro = async (event) => {
     event.preventDefault();
 
-    await fetch(`${API_BASE_URL}/livros`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    });
-    setForm({ titulo: '', autor: '', ano: '', genero: '' });
-    const res = await fetch(`${API_BASE_URL}/livros`);
-    setLivros(await res.json());
+    const anoNormalizado = Number.parseInt(form.ano, 10);
+
+    if (!Number.isInteger(anoNormalizado) || anoNormalizado < 1) {
+      window.alert('Informe um ano inteiro maior ou igual a 1 e selecione a era correta (a.C. ou d.C.).');
+      return;
+    }
+
+    const payload = {
+      ...form,
+      ano: anoNormalizado,
+      era: form.era || 'DC',
+    };
+
+    try {
+      const resposta = await fetch(`${API_BASE_URL}/livros`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!resposta.ok) {
+        const erro = await resposta.json().catch(() => ({}));
+        window.alert(erro.erro || 'Nao foi possivel salvar o livro.');
+        return;
+      }
+
+      setForm({ titulo: '', autor: '', ano: '', era: 'DC', genero: '' });
+      await carregarLivros({ mostrarErro: true });
+      exibirFeedback('Livro salvo com sucesso.');
+    } catch (error) {
+      exibirFeedback('Nao foi possivel salvar o livro.', 'error');
+    }
   };
 
   const excluirLivro = async (id) => {
@@ -71,12 +130,16 @@ function App() {
       return;
     }
 
-    await fetch(`${API_BASE_URL}/livros/${id}`, {
-      method: 'DELETE',
-    });
+    try {
+      await fetch(`${API_BASE_URL}/livros/${id}`, {
+        method: 'DELETE',
+      });
 
-    const res = await fetch(`${API_BASE_URL}/livros`);
-    setLivros(await res.json());
+      await carregarLivros({ mostrarErro: true });
+      exibirFeedback('Livro excluido com sucesso.');
+    } catch (error) {
+      exibirFeedback('Nao foi possivel excluir o livro.', 'error');
+    }
   };
 
   return (
@@ -109,7 +172,7 @@ function App() {
               {livros.length}
             </Typography>
             <Typography className="hero-panel-text">
-              livros cadastrados no banco de dados local.
+              livros cadastrados no banco de dados.
             </Typography>
           </Paper>
         </Box>
@@ -152,8 +215,20 @@ function App() {
                   type="number"
                   value={form.ano}
                   onChange={(event) => setForm({ ...form, ano: event.target.value })}
+                  inputProps={{ min: 1, step: 1 }}
+                  helperText="Use ano positivo e selecione a era ao lado."
                   fullWidth
                 />
+                <TextField
+                  select
+                  label="Era"
+                  value={form.era}
+                  onChange={(event) => setForm({ ...form, era: event.target.value })}
+                  fullWidth
+                >
+                  <MenuItem value="DC">d.C.</MenuItem>
+                  <MenuItem value="AC">a.C.</MenuItem>
+                </TextField>
                 <TextField
                   label="Gênero"
                   value={form.genero}
@@ -185,7 +260,21 @@ function App() {
               <Divider className="section-divider" />
 
               <Stack spacing={2} className="books-stack">
-                {livros.length === 0 ? (
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, index) => (
+                    <Card key={`skeleton-${index}`} className="book-card" variant="outlined">
+                      <CardContent className="book-card-content">
+                        <Skeleton variant="text" width="34%" height={22} />
+                        <Skeleton variant="text" width="62%" height={34} />
+                        <Skeleton variant="text" width="44%" height={24} />
+                        <Stack direction="row" spacing={1}>
+                          <Skeleton variant="rounded" width={84} height={24} />
+                          <Skeleton variant="rounded" width={110} height={24} />
+                        </Stack>
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : livros.length === 0 ? (
                   <Box className="empty-state">
                     <Typography variant="h6">Nenhum livro cadastrado ainda</Typography>
                     <Typography>
@@ -220,7 +309,10 @@ function App() {
                         </Box>
 
                         <Stack direction="row" spacing={1} className="book-tags" flexWrap="wrap">
-                          <Chip label={livro.ano} size="small" />
+                          <Chip
+                            label={`${livro.ano} ${(livro.era || 'DC') === 'AC' ? 'a.C.' : 'd.C.'}`}
+                            size="small"
+                          />
                           <Chip label={livro.genero} size="small" variant="outlined" />
                         </Stack>
                       </CardContent>
@@ -232,6 +324,17 @@ function App() {
           </Grid>
         </Grid>
       </Container>
+
+      <Snackbar
+        open={feedback.open}
+        autoHideDuration={2600}
+        onClose={fecharFeedback}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={fecharFeedback} severity={feedback.severity} variant="filled" sx={{ width: '100%' }}>
+          {feedback.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
