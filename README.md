@@ -11,8 +11,13 @@ O projeto esta dividido em dois apps:
 
 ## Funcionalidades atuais
 
-- Cadastro e listagem de livros.
-- Exclusao de livros.
+- Cadastro, listagem, edicao e exclusao de livros.
+- Filtros rapidos por status na listagem:
+	- `Todos`
+	- `Lendo`
+	- `Lidos`
+	- `Quero ler`
+- Contador de itens filtrados na listagem.
 - Campos obrigatorios: titulo, autor, ano, era e genero.
 - Campos opcionais:
 	- descricao
@@ -24,6 +29,8 @@ O projeto esta dividido em dois apps:
 	- se o status nao for informado, o sistema assume `QUERO_LER`
 	- o campo de data de leitura no frontend so aparece para status `LIDO`
 - Destaque visual no card por faixa de nota e marcador de favorito.
+- Interface responsiva com ajustes especificos para desktop e celular.
+- Rodape com link para o projeto no GitHub.
 
 ## Stack
 
@@ -169,6 +176,13 @@ Remove um livro pelo identificador.
 2. Configurar `REACT_APP_API_URL` com a URL do backend publicado.
 3. Build command: `npm run build`.
 4. Output directory: `build`.
+
+### Alternativa de deploy no Render
+
+1. Publicar o backend como Web Service usando `biblioteca-backend`.
+2. Configurar `MONGODB_URI` e `CORS_ORIGIN`.
+3. Publicar o frontend como Static Site usando `biblioteca-frontend`.
+4. Configurar `REACT_APP_API_URL` com a URL publica do backend.
 
 ## Observacoes
 

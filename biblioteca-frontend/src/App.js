@@ -653,6 +653,26 @@ function App() {
             </Paper>
           </Grid>
         </Grid>
+
+        <Box component="footer" className="app-footer">
+          <Typography className="app-footer-text">
+            Projeto disponível no{' '}
+            <a
+              href="https://github.com/Joaoptoaldo/AcervoHub"
+              target="_blank"
+              rel="noreferrer"
+              className="app-footer-link"
+            >
+              <span>GitHub</span>
+              <Box
+                component="img"
+                src={`${PUBLIC_URL}/github.svg`}
+                alt="GitHub"
+                className="app-footer-icon"
+              />
+            </a>
+          </Typography>
+        </Box>
       </Container>
 
       <Snackbar
