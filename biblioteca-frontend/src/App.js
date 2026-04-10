@@ -22,7 +22,7 @@ import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 
 
-const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 const STATUS_OPTIONS = [
   { value: 'QUERO_LER', label: 'quero ler' },
@@ -118,6 +118,7 @@ function App() {
     favorito: false,
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [editandoId, setEditandoId] = useState(null);
 
   const exibirFeedback = (message, severity = 'success') => {
     setFeedback({ open: true, message, severity });
@@ -152,9 +153,8 @@ function App() {
     carregarLivros({ mostrarErro: true });
   }, [carregarLivros]);
 
-  
-  // Adicionar livro
-  const adicionarLivro = async (event) => {
+  // Adicionar ou atualizar livro
+  const adicionarOuAtualizarLivro = async (event) => {
     event.preventDefault();
 
     const anoNormalizado = Number.parseInt(form.ano, 10);
@@ -188,15 +188,18 @@ function App() {
     };
 
     try {
-      const resposta = await fetch(`${API_BASE_URL}/livros`, {
-        method: 'POST',
+      const url = editandoId ? `${API_BASE_URL}/livros/${editandoId}` : `${API_BASE_URL}/livros`;
+      const method = editandoId ? 'PUT' : 'POST';
+      
+      const resposta = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
       if (!resposta.ok) {
         const erro = await resposta.json().catch(() => ({}));
-        window.alert(erro.erro || 'Nao foi possivel salvar o livro.');
+        window.alert(erro.erro || (editandoId ? 'Nao foi possivel atualizar o livro.' : 'Nao foi possivel salvar o livro.'));
         return;
       }
 
@@ -212,10 +215,11 @@ function App() {
         dataLeitura: '',
         favorito: false,
       });
+      setEditandoId(null);
       await carregarLivros({ mostrarErro: true });
-      exibirFeedback('Livro salvo com sucesso.');
+      exibirFeedback(editandoId ? 'Livro atualizado com sucesso.' : 'Livro salvo com sucesso.');
     } catch (error) {
-      exibirFeedback('Nao foi possivel salvar o livro.', 'error');
+      exibirFeedback(editandoId ? 'Nao foi possivel atualizar o livro.' : 'Nao foi possivel salvar o livro.', 'error');
     }
   };
 
@@ -224,6 +228,39 @@ function App() {
       ...estadoAtual,
       [livroId]: !estadoAtual[livroId],
     }));
+  };
+
+  const editarLivro = (livro) => {
+    setForm({
+      titulo: livro.titulo,
+      autor: livro.autor,
+      ano: String(livro.ano),
+      era: livro.era || 'DC',
+      genero: livro.genero,
+      descricao: livro.descricao || '',
+      nota: livro.nota ? String(livro.nota) : '',
+      statusLeitura: livro.statusLeitura || '',
+      dataLeitura: livro.dataLeitura ? new Date(livro.dataLeitura).toISOString().split('T')[0] : '',
+      favorito: livro.favorito || false,
+    });
+    setEditandoId(livro._id);
+    document.querySelector('.form-stack')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const cancelarEdicao = () => {
+    setForm({
+      titulo: '',
+      autor: '',
+      ano: '',
+      era: 'DC',
+      genero: '',
+      descricao: '',
+      nota: '',
+      statusLeitura: '',
+      dataLeitura: '',
+      favorito: false,
+    });
+    setEditandoId(null);
   };
 
   const excluirLivro = async (id) => {
@@ -281,7 +318,7 @@ function App() {
         </Box>
 
         <Grid container spacing={0} className="content-grid">
-          <Grid item xs={12} md={6} lg={6}>
+          <Grid xs={12} md={6} lg={6}>
             <Paper className="section-card form-card" elevation={0}>
               <Box className="section-header">
                 <Box className="section-title-wrap">
@@ -292,15 +329,15 @@ function App() {
                     className="section-title-icon"
                   />
                   <Typography variant="h5" className="section-title">
-                    Novo livro
+                    {editandoId ? 'Editar livro' : 'Novo livro'}
                   </Typography>
                 </Box>
                 <Typography className="section-caption">
-                  Preencha os campos abaixo para adicionar um registro.
+                  {editandoId ? 'Atualize as informações do livro abaixo.' : 'Preencha os campos abaixo para adicionar um registro.'}
                 </Typography>
               </Box>
 
-              <Box component="form" onSubmit={adicionarLivro} className="form-stack">
+              <Box component="form" onSubmit={adicionarOuAtualizarLivro} className="form-stack">
                 <TextField
                   label="Título"
                   value={form.titulo}
@@ -412,14 +449,21 @@ function App() {
                   />
                 </Box>
 
-                <Button variant="contained" type="submit" className="submit-button" fullWidth>
-                  Salvar livro
-                </Button>
+                <Stack direction="row" spacing={1}>
+                  <Button variant="contained" type="submit" className="submit-button" fullWidth>
+                    {editandoId ? 'Atualizar livro' : 'Salvar livro'}
+                  </Button>
+                  {editandoId && (
+                    <Button variant="outlined" type="button" onClick={cancelarEdicao} fullWidth>
+                      Cancelar
+                    </Button>
+                  )}
+                </Stack>
               </Box>
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={6} lg={6}>
+          <Grid xs={12} md={6} lg={6}>
             <Paper className="section-card list-card" elevation={0}>
               <Box className="section-header list-header">
                 <Box>
@@ -477,15 +521,25 @@ function App() {
                           <Box className="book-date-badge">
                             adicionado em {formatarDataCadastro(livro.dataCadastro)}
                           </Box>
-                          <Button
-                            variant="text"
-                            size="small"
-                            color="error"
-                            className="book-delete-button"
-                            onClick={() => excluirLivro(livro._id)}
-                          >
-                            excluir
-                          </Button>
+                          <Stack direction="row" spacing={0.5}>
+                            <Button
+                              variant="text"
+                              size="small"
+                              className="book-edit-button"
+                              onClick={() => editarLivro(livro)}
+                            >
+                              editar
+                            </Button>
+                            <Button
+                              variant="text"
+                              size="small"
+                              color="error"
+                              className="book-delete-button"
+                              onClick={() => excluirLivro(livro._id)}
+                            >
+                              excluir
+                            </Button>
+                          </Stack>
                         </Box>
                         <Box className="book-main">
                           <Stack direction="row" spacing={1} className="book-headline-chips" flexWrap="wrap">

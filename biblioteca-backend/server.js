@@ -172,6 +172,30 @@ app.post('/livros', ensureDatabaseConnection, async (req, res) => {
     }
 });
 
+app.put('/livros/:id', ensureDatabaseConnection, async (req, res) => {
+    try {
+        const livroAtualizado = await Livro.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+
+        if (!livroAtualizado) {
+            return res.status(404).json({ erro: 'Livro nao encontrado.' });
+        }
+
+        res.json(livroAtualizado);
+    } catch (error) {
+        console.error('Erro ao atualizar livro:', error);
+
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                erro: Object.values(error.errors)
+                    .map((item) => item.message)
+                    .join(' ')
+            });
+        }
+
+        res.status(500).json({ erro: 'Erro ao atualizar livro.' });
+    }
+});
+
 app.delete('/livros/:id', ensureDatabaseConnection, async (req, res) => {
     try {
         const livroRemovido = await Livro.findByIdAndDelete(req.params.id);
