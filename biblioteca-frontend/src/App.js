@@ -10,9 +10,11 @@ import {
   Grid,
   MenuItem,
   Paper,
+  Rating,
   Skeleton,
   Snackbar,
   Stack,
+  Switch,
   TextField,
   Typography,
 } from '@mui/material';
@@ -22,6 +24,34 @@ import './App.css';
 
 const API_BASE_URL = (process.env.REACT_APP_API_URL || 'http://localhost:3000').replace(/\/$/, '');
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
+const STATUS_OPTIONS = [
+  { value: 'QUERO_LER', label: 'quero ler' },
+  { value: 'LENDO', label: 'lendo' },
+  { value: 'LIDO', label: 'lido' },
+];
+
+const getLabelStatusLeitura = (statusLeitura) => {
+  const statusNormalizado = (statusLeitura || 'QUERO_LER').toUpperCase();
+  const encontrado = STATUS_OPTIONS.find((item) => item.value === statusNormalizado);
+  return encontrado ? encontrado.label : 'quero ler';
+};
+
+const getClasseNota = (nota) => {
+  if (typeof nota !== 'number') {
+    return 'rating-tier-unrated';
+  }
+
+  if (nota >= 4.5) {
+    return 'rating-tier-high';
+  }
+
+  if (nota >= 3) {
+    return 'rating-tier-mid';
+  }
+
+  return 'rating-tier-low';
+};
+
 const formatarDataCadastro = (dataCadastro) => {
   if (!dataCadastro) {
     return 'Data de cadastro indisponivel';
@@ -40,6 +70,32 @@ const formatarDataCadastro = (dataCadastro) => {
   }).format(data);
 };
 
+const formatarDataLeitura = (dataLeitura) => {
+  if (!dataLeitura) {
+    return 'Data de leitura nao informada';
+  }
+
+  const data = new Date(dataLeitura);
+
+  if (Number.isNaN(data.getTime())) {
+    return 'Data de leitura nao informada';
+  }
+
+  return new Intl.DateTimeFormat('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(data);
+};
+
+const truncarDescricao = (descricao, limite = 140) => {
+  if (!descricao || descricao.length <= limite) {
+    return descricao;
+  }
+
+  return `${descricao.slice(0, limite).trimEnd()}...`;
+};
+
 
 function App() {
   const [livros, setLivros] = useState([]);
@@ -49,7 +105,19 @@ function App() {
     severity: 'success',
     message: '',
   });
-  const [form, setForm] = useState({ titulo: '', autor: '', ano: '', era: 'DC', genero: '' });
+  const [form, setForm] = useState({
+    titulo: '',
+    autor: '',
+    ano: '',
+    era: 'DC',
+    genero: '',
+    descricao: '',
+    nota: '',
+    statusLeitura: '',
+    dataLeitura: '',
+    favorito: false,
+  });
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
 
   const exibirFeedback = (message, severity = 'success') => {
     setFeedback({ open: true, message, severity });
@@ -90,9 +158,21 @@ function App() {
     event.preventDefault();
 
     const anoNormalizado = Number.parseInt(form.ano, 10);
+    const statusLeituraNormalizado = (form.statusLeitura || 'QUERO_LER').toUpperCase();
+    const notaNormalizada = form.nota === '' ? null : Number.parseFloat(form.nota);
 
     if (!Number.isInteger(anoNormalizado) || anoNormalizado < 1) {
       window.alert('Informe um ano inteiro maior ou igual a 1 e selecione a era correta (a.C. ou d.C.).');
+      return;
+    }
+
+    if (form.nota !== '' && (!Number.isFinite(notaNormalizada) || notaNormalizada < 1 || notaNormalizada > 5)) {
+      window.alert('Informe uma nota entre 1 e 5.');
+      return;
+    }
+
+    if (form.nota !== '' && Math.round(notaNormalizada * 2) !== notaNormalizada * 2) {
+      window.alert('A nota deve ser informada em passos de 0.5.');
       return;
     }
 
@@ -100,6 +180,11 @@ function App() {
       ...form,
       ano: anoNormalizado,
       era: form.era || 'DC',
+      nota: notaNormalizada,
+      dataLeitura: statusLeituraNormalizado === 'LIDO' ? (form.dataLeitura || null) : null,
+      statusLeitura: statusLeituraNormalizado,
+      favorito: Boolean(form.favorito),
+      descricao: (form.descricao || '').trim(),
     };
 
     try {
@@ -115,12 +200,30 @@ function App() {
         return;
       }
 
-      setForm({ titulo: '', autor: '', ano: '', era: 'DC', genero: '' });
+      setForm({
+        titulo: '',
+        autor: '',
+        ano: '',
+        era: 'DC',
+        genero: '',
+        descricao: '',
+        nota: '',
+        statusLeitura: '',
+        dataLeitura: '',
+        favorito: false,
+      });
       await carregarLivros({ mostrarErro: true });
       exibirFeedback('Livro salvo com sucesso.');
     } catch (error) {
       exibirFeedback('Nao foi possivel salvar o livro.', 'error');
     }
+  };
+
+  const alternarDescricao = (livroId) => {
+    setExpandedDescriptions((estadoAtual) => ({
+      ...estadoAtual,
+      [livroId]: !estadoAtual[livroId],
+    }));
   };
 
   const excluirLivro = async (id) => {
@@ -177,8 +280,8 @@ function App() {
           </Paper>
         </Box>
 
-        <Grid container spacing={3} className="content-grid">
-          <Grid item xs={12} md={5}>
+        <Grid container spacing={0} className="content-grid">
+          <Grid item xs={12} md={6} lg={6}>
             <Paper className="section-card form-card" elevation={0}>
               <Box className="section-header">
                 <Box className="section-title-wrap">
@@ -235,6 +338,79 @@ function App() {
                   onChange={(event) => setForm({ ...form, genero: event.target.value })}
                   fullWidth
                 />
+                <TextField
+                  label="Descrição"
+                  value={form.descricao}
+                  onChange={(event) => setForm({ ...form, descricao: event.target.value })}
+                  multiline
+                  minRows={3}
+                  helperText="Resumo livre sobre a obra (opcional)."
+                  fullWidth
+                />
+
+                <Box className="rating-input-wrap">
+                  <Typography className="rating-input-label">Nota (1 a 5)</Typography>
+                  <Stack direction="row" spacing={1.5} alignItems="center">
+                    <Rating
+                      value={form.nota === '' ? null : Number(form.nota)}
+                      precision={0.5}
+                      onChange={(_, value) => {
+                        setForm({ ...form, nota: typeof value === 'number' ? value : '' });
+                      }}
+                    />
+                    <TextField
+                      type="number"
+                      value={form.nota}
+                      onChange={(event) => setForm({ ...form, nota: event.target.value })}
+                      inputProps={{ min: 1, max: 5, step: 0.5 }}
+                      className="rating-number-input"
+                      placeholder="opcional"
+                    />
+                  </Stack>
+                </Box>
+
+                <TextField
+                  select
+                  label="Status de leitura"
+                  value={form.statusLeitura}
+                  onChange={(event) => {
+                    const novoStatus = event.target.value;
+                    setForm({
+                      ...form,
+                      statusLeitura: novoStatus,
+                      dataLeitura: novoStatus === 'LIDO' ? form.dataLeitura : '',
+                    });
+                  }}
+                  helperText="Opcional. Se nao selecionar, sera considerado 'quero ler'."
+                  fullWidth
+                >
+                  <MenuItem value="">nao informar (quero ler)</MenuItem>
+                  {STATUS_OPTIONS.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                {form.statusLeitura === 'LIDO' ? (
+                  <TextField
+                    label="Data de leitura"
+                    type="date"
+                    value={form.dataLeitura}
+                    onChange={(event) => setForm({ ...form, dataLeitura: event.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    helperText="Opcional para status lido."
+                    fullWidth
+                  />
+                ) : null}
+
+                <Box className="favorite-input-wrap">
+                  <Typography className="favorite-input-label">Marcar como favorito</Typography>
+                  <Switch
+                    checked={Boolean(form.favorito)}
+                    onChange={(event) => setForm({ ...form, favorito: event.target.checked })}
+                  />
+                </Box>
 
                 <Button variant="contained" type="submit" className="submit-button" fullWidth>
                   Salvar livro
@@ -243,7 +419,7 @@ function App() {
             </Paper>
           </Grid>
 
-          <Grid item xs={12} md={7}>
+          <Grid item xs={12} md={6} lg={6}>
             <Paper className="section-card list-card" elevation={0}>
               <Box className="section-header list-header">
                 <Box>
@@ -282,9 +458,21 @@ function App() {
                     </Typography>
                   </Box>
                 ) : (
-                  livros.map((livro, index) => (
-                    <Card key={livro._id || index} className="book-card" variant="outlined">
-                      <CardContent className="book-card-content">
+                  livros.map((livro, index) => {
+                    const descricao = (livro.descricao || '').trim();
+                    const livroId = livro._id || `index-${index}`;
+                    const descricaoGrande = descricao.length > 140;
+                    const descricaoExpandida = Boolean(expandedDescriptions[livroId]);
+                    const descricaoExibida = descricaoExpandida ? descricao : truncarDescricao(descricao, 140);
+                    const notaLivro = typeof livro.nota === 'number' ? livro.nota : null;
+
+                    return (
+                      <Card
+                        key={livroId}
+                        className={`book-card ${getClasseNota(notaLivro)} ${livro.favorito ? 'book-card-favorite' : ''}`}
+                        variant="outlined"
+                      >
+                        <CardContent className="book-card-content">
                         <Box className="book-actions">
                           <Box className="book-date-badge">
                             adicionado em {formatarDataCadastro(livro.dataCadastro)}
@@ -300,12 +488,47 @@ function App() {
                           </Button>
                         </Box>
                         <Box className="book-main">
+                          <Stack direction="row" spacing={1} className="book-headline-chips" flexWrap="wrap">
+                            <Chip label={getLabelStatusLeitura(livro.statusLeitura)} size="small" className="status-chip" />
+                            {livro.favorito ? <Chip label="favorito" size="small" className="favorite-chip" /> : null}
+                          </Stack>
+
                           <Typography variant="h6" className="book-title">
                             {livro.titulo}
                           </Typography>
                           <Typography className="book-author">
                             {livro.autor}
                           </Typography>
+
+                          <Stack direction="row" spacing={1} alignItems="center" className="book-rating-wrap">
+                            <Rating value={notaLivro || 0} precision={0.5} readOnly />
+                            <Typography className="book-rating-number">
+                              {notaLivro ? `${notaLivro.toFixed(1)} / 5` : 'sem nota'}
+                            </Typography>
+                          </Stack>
+
+                          <Typography className="book-reading-date">
+                            leitura: {formatarDataLeitura(livro.dataLeitura)}
+                          </Typography>
+
+                          {descricao ? (
+                            <Box className="book-description-wrap">
+                              <Typography className="book-description">
+                                {descricaoExibida}
+                              </Typography>
+
+                              {descricaoGrande ? (
+                                <Button
+                                  variant="text"
+                                  size="small"
+                                  className="book-see-more"
+                                  onClick={() => alternarDescricao(livroId)}
+                                >
+                                  {descricaoExpandida ? 'ver menos' : 'ver mais'}
+                                </Button>
+                              ) : null}
+                            </Box>
+                          ) : null}
                         </Box>
 
                         <Stack direction="row" spacing={1} className="book-tags" flexWrap="wrap">
@@ -315,9 +538,10 @@ function App() {
                           />
                           <Chip label={livro.genero} size="small" variant="outlined" />
                         </Stack>
-                      </CardContent>
-                    </Card>
-                  ))
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </Stack>
             </Paper>

@@ -78,6 +78,32 @@ const livroSchema = new mongoose.Schema({
         required: [true, 'Genero e obrigatorio.'],
         trim: true
     },
+    descricao: {
+        type: String,
+        trim: true,
+        default: ''
+    },
+    nota: {
+        type: Number,
+        min: [1, 'Nota deve ser maior ou igual a 1.'],
+        max: [5, 'Nota deve ser menor ou igual a 5.'],
+        validate: {
+            validator: (valor) => valor == null || (Number.isFinite(valor) && Math.round(valor * 2) === valor * 2),
+            message: 'Nota deve ser informada em incrementos de 0.5.'
+        }
+    },
+    dataLeitura: {
+        type: Date
+    },
+    statusLeitura: {
+        type: String,
+        enum: ['QUERO_LER', 'LENDO', 'LIDO'],
+        default: 'QUERO_LER'
+    },
+    favorito: {
+        type: Boolean,
+        default: false
+    },
     dataCadastro: {
         type: Date,
         default: Date.now
@@ -92,6 +118,23 @@ livroSchema.pre('validate', function () {
 
     if (typeof this.era === 'string') {
         this.era = this.era.trim().toUpperCase();
+    }
+
+    if (typeof this.nota === 'string') {
+        const notaParseada = Number.parseFloat(this.nota);
+        this.nota = Number.isNaN(notaParseada) ? this.nota : notaParseada;
+    }
+
+    if (typeof this.statusLeitura === 'string') {
+        this.statusLeitura = this.statusLeitura.trim().toUpperCase();
+    }
+
+    if (typeof this.descricao === 'string') {
+        this.descricao = this.descricao.trim();
+    }
+
+    if (typeof this.favorito === 'string') {
+        this.favorito = this.favorito === 'true';
     }
 });
 

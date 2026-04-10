@@ -1,3 +1,9 @@
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
   font-family: Inter, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -5,6 +11,8 @@ body {
   -moz-osx-font-smoothing: grayscale;
   color: #201913;
   background: #ece0d1;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 * {

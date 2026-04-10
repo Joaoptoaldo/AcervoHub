@@ -1,123 +1,138 @@
-# Biblioteca
+# AcervoHub
 
-Aplicação para cadastro e listagem de livros com frontend em React e backend em Node.js, com deploy separado no Vercel e no Railway.
+Aplicacao web para cadastro e acompanhamento de livros, com frontend em React e backend em Node.js/Express usando MongoDB.
 
-O sistema é dividido em duas partes:
+## Visao geral
 
-- `biblioteca-backend`: API em Node.js com Express e MongoDB.
-- `biblioteca-frontend`: interface em React com Material UI.
+O projeto esta dividido em dois apps:
 
-## Funcionalidades
+- `biblioteca-backend`: API REST com Express + Mongoose.
+- `biblioteca-frontend`: interface React com Material UI.
 
-- Listar livros cadastrados.
-- Cadastrar novos livros com título, autor, ano, era (a.C./d.C.) e gênero.
-- Persistir os dados em MongoDB Atlas.
+## Funcionalidades atuais
 
-## Tecnologias
+- Cadastro e listagem de livros.
+- Exclusao de livros.
+- Campos obrigatorios: titulo, autor, ano, era e genero.
+- Campos opcionais:
+	- descricao
+	- nota (1 a 5 com passo 0.5)
+	- status de leitura (`QUERO_LER`, `LENDO`, `LIDO`)
+	- data de leitura
+	- favorito
+- Regras de formulario:
+	- se o status nao for informado, o sistema assume `QUERO_LER`
+	- o campo de data de leitura no frontend so aparece para status `LIDO`
+- Destaque visual no card por faixa de nota e marcador de favorito.
+
+## Stack
 
 - React 19
 - Material UI
 - Node.js
 - Express
 - Mongoose
-- MongoDB
+- MongoDB Atlas
 
-## Pré-requisitos
+## Modelo de dados
 
-- Node.js e npm instalados.
-- Conta no MongoDB Atlas.
-- Conta no Railway.
-- Conta no Vercel.
+Cada livro pode conter:
 
-O backend usa a base `Livro` no MongoDB definido em `MONGODB_URI`.
+- `titulo` (obrigatorio)
+- `autor` (obrigatorio)
+- `ano` (obrigatorio, inteiro >= 1)
+- `era` (obrigatorio, `AC` ou `DC`)
+- `genero` (obrigatorio)
+- `descricao` (opcional)
+- `nota` (opcional, numero entre 1 e 5 em incrementos de 0.5)
+- `statusLeitura` (opcional, default `QUERO_LER`)
+- `dataLeitura` (opcional)
+- `favorito` (opcional, default `false`)
+- `dataCadastro` (automatico)
 
-## Estrutura dos dados
+## Como rodar localmente
 
-Cada livro possui os campos abaixo:
+### 1. Backend
 
-- `titulo`
-- `autor`
-- `ano`
-- `era` (`AC` para a.C. e `DC` para d.C.)
-- `genero`
-- `dataCadastro`
-
-## Como executar localmente
-
-### 1. Iniciar o backend
-
-No diretório `biblioteca-backend`:
-
-```bash
-npm install
-node server.js
-```
-
-O servidor sobe em `http://localhost:3000`.
-
-### 2. Iniciar o frontend
-
-No diretório `biblioteca-frontend`:
+Na pasta `biblioteca-backend`:
 
 ```bash
 npm install
 npm start
 ```
 
-Se a porta 3000 estiver ocupada pelo backend, o React normalmente solicita outra porta disponível, geralmente `3001`.
+Backend padrao em `http://localhost:3000`.
 
-No modo local, o frontend usa `http://localhost:3000` por padrão. Se quiser apontar para outra API, defina `REACT_APP_API_URL`.
+### 2. Frontend
 
-## Deploy na web
+Na pasta `biblioteca-frontend`:
 
-### Backend no Railway
+```bash
+npm install
+npm start
+```
 
-1. Crie um projeto no Railway apontando para a pasta `biblioteca-backend`.
-2. Configure as variáveis de ambiente:
-	- `MONGODB_URI` com a string do MongoDB Atlas
-	- `CORS_ORIGIN` com a URL do frontend publicado no Vercel
-3. O Railway vai executar `npm start` automaticamente.
-4. Use a URL pública do backend, por exemplo `https://seu-backend.up.railway.app`.
+Se a porta 3000 estiver ocupada, o React pode subir em outra porta (geralmente `3001`).
 
-### Frontend no Vercel
+### 3. Atalho no root
 
-1. Crie um projeto no Vercel apontando para a pasta `biblioteca-frontend`.
-2. Configure a variável de ambiente:
-	- `REACT_APP_API_URL` com a URL do backend no Railway
-3. Build command: `npm run build`
-4. Output directory: `build`
+No root do repositorio:
 
-Exemplo:
+```bash
+npm start
+```
 
-- Frontend: `https://seu-projeto.vercel.app`
-- Backend: `https://seu-backend.up.railway.app`
+Esse comando inicia apenas o backend (atalho para `npm --prefix biblioteca-backend start`).
 
-O frontend consome a API em `REACT_APP_API_URL` e deixa de depender de `localhost`.
-
-## Variáveis de ambiente
+## Variaveis de ambiente
 
 ### Backend
 
-- `MONGODB_URI`: string de conexão do MongoDB Atlas.
-- `CORS_ORIGIN`: URL do frontend no Vercel.
-- `PORT`: definida automaticamente pelo Railway.
+- `MONGODB_URI`: string de conexao do MongoDB Atlas.
+- `CORS_ORIGIN`: origem permitida no CORS (URL do frontend publicado).
+- `PORT`: porta da API (opcional; default local 3000).
 
 ### Frontend
 
-- `REACT_APP_API_URL`: URL pública do backend no Railway.
+- `REACT_APP_API_URL`: URL da API.
+	- fallback local: `http://localhost:3000`
 
 ## API
 
+### `GET /`
+
+Health-check simples:
+
+```json
+{ "status": "ok" }
+```
+
 ### `GET /livros`
 
-Retorna todos os livros cadastrados.
+Retorna todos os livros.
 
 ### `POST /livros`
 
-Cria um novo livro.
-O campo `dataCadastro` é preenchido automaticamente no momento do salvamento.
+Cria um livro.
 
-Exemplo de corpo da requisição:
+Exemplo de payload completo:
+
+```json
+{
+	"titulo": "1984",
+	"autor": "George Orwell",
+	"ano": 1949,
+	"era": "DC",
+	"genero": "Distopia",
+	"descricao": "Romance distopico sobre vigilancia e controle social.",
+	"nota": 4.5,
+	"statusLeitura": "LIDO",
+	"dataLeitura": "2026-04-10",
+	"favorito": true
+}
+```
+
+Payload minimo valido:
 
 ```json
 {
@@ -129,13 +144,33 @@ Exemplo de corpo da requisição:
 }
 ```
 
-Regras de validacao do backend:
+### `DELETE /livros/:id`
+
+Remove um livro pelo identificador.
+
+## Regras de validacao (backend)
 
 - `ano` deve ser inteiro e maior ou igual a `1`.
-- `era` aceita apenas `AC` (antes de Cristo) ou `DC` (depois de Cristo).
+- `era` aceita apenas `AC` ou `DC`.
+- `nota`, quando informada, deve estar entre `1` e `5` e seguir passo `0.5`.
+- `statusLeitura`, quando informado, aceita apenas `QUERO_LER`, `LENDO` ou `LIDO`.
 
-## Observações
+## Deploy
 
-- O frontend usa `REACT_APP_API_URL` em produção e `http://localhost:3000` como fallback local.
-- Se o MongoDB Atlas não estiver acessível, o backend não conseguirá salvar ou carregar os livros.
-- O backend atual expõe apenas as rotas `GET /livros` e `POST /livros`.
+### Backend no Railway
+
+1. Criar projeto apontando para `biblioteca-backend`.
+2. Configurar `MONGODB_URI` e `CORS_ORIGIN`.
+3. Publicar e usar a URL gerada.
+
+### Frontend no Vercel
+
+1. Criar projeto apontando para `biblioteca-frontend`.
+2. Configurar `REACT_APP_API_URL` com a URL do backend publicado.
+3. Build command: `npm run build`.
+4. Output directory: `build`.
+
+## Observacoes
+
+- Se o MongoDB nao estiver acessivel, a API responde erro de indisponibilidade para rotas que dependem de banco.
+- Em producao, sempre definir `CORS_ORIGIN` para restringir origem permitida.

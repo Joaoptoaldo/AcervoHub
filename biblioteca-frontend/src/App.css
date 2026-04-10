@@ -139,6 +139,21 @@
   color: var(--ink-700);
 }
 
+.section-caption,
+.book-author,
+.book-reading-date,
+.book-description,
+.book-rating-number,
+.book-date-badge,
+.book-tags .MuiChip-label,
+.form-stack .MuiFormHelperText-root {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
 .hero-panel-number {
   font-weight: 800 !important;
   color: #221a14;
@@ -147,7 +162,19 @@
 }
 
 .content-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 25px;
   align-items: stretch;
+}
+
+.content-grid > .MuiGrid-item,
+.content-grid > * {
+  min-width: 0;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding-top: 0 !important;
+  padding-left: 0 !important;
 }
 
 .section-card {
@@ -207,6 +234,28 @@
 .form-stack {
   display: grid;
   gap: 16px;
+}
+
+.rating-input-wrap,
+.favorite-input-wrap {
+  border: 1px solid rgba(61, 41, 23, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.52);
+  padding: 10px 14px;
+}
+
+.rating-input-label,
+.favorite-input-label {
+  color: var(--ink-700);
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+  margin-bottom: 6px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.rating-number-input {
+  width: 96px;
 }
 
 .form-stack .MuiTextField-root .MuiOutlinedInput-root {
@@ -313,10 +362,11 @@
 .books-stack {
   margin-top: 20px;
   flex: 1;
-  min-height: 300px;
-  max-height: 560px;
-  overflow-y: auto;
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
   padding-right: 4px;
+  padding-bottom: 18px;
 }
 
 .books-stack::-webkit-scrollbar {
@@ -334,10 +384,38 @@
 
 .book-card {
   position: relative;
+  overflow: visible !important;
   border-radius: 20px !important;
   border-color: rgba(61, 41, 23, 0.1) !important;
   background: rgba(255, 255, 255, 0.72) !important;
   transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease !important;
+}
+
+.rating-tier-unrated {
+  border-left: 5px solid rgba(61, 41, 23, 0.16) !important;
+}
+
+.rating-tier-low {
+  border-left: 5px solid rgba(179, 38, 30, 0.72) !important;
+}
+
+.rating-tier-mid {
+  border-left: 5px solid rgba(168, 116, 66, 0.88) !important;
+}
+
+.rating-tier-high {
+  border-left: 5px solid rgba(76, 148, 52, 0.9) !important;
+  background: linear-gradient(90deg, rgba(228, 247, 221, 0.6), rgba(255, 255, 255, 0.75)) !important;
+}
+
+.book-card-favorite::after {
+  content: '★';
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  color: #bb7a34;
+  font-size: 0.9rem;
+  opacity: 0.82;
 }
 
 .book-card:hover {
@@ -353,16 +431,47 @@
   gap: 10px;
   align-items: flex-start;
   padding-top: 18px !important;
+  padding-bottom: 18px !important;
+  overflow: visible;
 }
 
 .book-main {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
   padding-right: 0;
 }
 
+.book-headline-chips {
+  margin-bottom: 8px;
+}
+
+.status-chip {
+  background: rgba(74, 95, 120, 0.14) !important;
+  color: #2e3e51 !important;
+  font-weight: 700 !important;
+  text-transform: lowercase;
+}
+
+.favorite-chip {
+  background: rgba(187, 122, 52, 0.16) !important;
+  color: #73451c !important;
+  font-weight: 700 !important;
+  text-transform: lowercase;
+}
+
 .book-title {
+  display: block;
+  max-width: 100%;
+  line-height: 1.2 !important;
   font-weight: 700 !important;
   color: var(--ink-900);
   font-size: clamp(1.12rem, 1.8vw, 1.35rem) !important;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+  text-wrap: pretty;
   transition: color 220ms ease;
 }
 
@@ -370,11 +479,58 @@
   color: #6f4420;
 }
 
+.book-rating-wrap {
+  margin-top: 4px;
+}
+
+.book-rating-wrap .MuiRating-root {
+  color: #b86b2c;
+}
+
+.book-rating-number {
+  color: #5a412e;
+  font-size: 0.86rem !important;
+  font-weight: 700 !important;
+}
+
+.book-reading-date {
+  color: #6a533f;
+  font-size: 0.84rem !important;
+  margin-top: 2px !important;
+}
+
+.book-description-wrap {
+  margin-top: 6px;
+  width: 100%;
+}
+
+.book-description {
+  color: #3f2f22;
+  line-height: 1.52 !important;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  text-wrap: pretty;
+}
+
+.book-see-more {
+  margin-top: 4px !important;
+  padding-left: 0 !important;
+  min-width: auto !important;
+  color: #7b4d25 !important;
+  font-weight: 700 !important;
+  text-transform: lowercase !important;
+}
+
 .book-tags .MuiChip-root {
   background: rgba(110, 69, 33, 0.08);
   color: #4b2f17;
   font-weight: 700;
   transition: transform 180ms ease, background-color 180ms ease;
+}
+
+.book-tags {
+  width: 100%;
 }
 
 .book-actions {
@@ -527,6 +683,10 @@
     grid-template-columns: 1fr;
   }
 
+  .content-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .books-stack {
     max-height: none;
     overflow: visible;
@@ -540,6 +700,12 @@
 
   .book-actions {
     align-items: flex-start;
+  }
+}
+
+@media (min-width: 901px) {
+  .content-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
