@@ -30,6 +30,13 @@ const STATUS_OPTIONS = [
   { value: 'LIDO', label: 'lido' },
 ];
 
+const LIST_FILTER_OPTIONS = [
+  { value: 'ALL', label: 'todos' },
+  { value: 'LENDO', label: 'lendo' },
+  { value: 'LIDO', label: 'lidos' },
+  { value: 'QUERO_LER', label: 'quero ler' },
+];
+
 const getLabelStatusLeitura = (statusLeitura) => {
   const statusNormalizado = (statusLeitura || 'QUERO_LER').toUpperCase();
   const encontrado = STATUS_OPTIONS.find((item) => item.value === statusNormalizado);
@@ -119,6 +126,7 @@ function App() {
   });
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const [editandoId, setEditandoId] = useState(null);
+  const [filtroLista, setFiltroLista] = useState('ALL');
 
   const exibirFeedback = (message, severity = 'success') => {
     setFeedback({ open: true, message, severity });
@@ -282,6 +290,14 @@ function App() {
     }
   };
 
+  const livrosFiltrados = livros.filter((livro) => {
+    if (filtroLista === 'ALL') {
+      return true;
+    }
+
+    return (livro.statusLeitura || 'QUERO_LER').toUpperCase() === filtroLista;
+  });
+
   return (
     <Box className="app-shell">
       <Container maxWidth="lg" className="app-container">
@@ -300,7 +316,7 @@ function App() {
               </Typography>
             </Box>
             <Typography className="hero-subtitle">
-              Cadastre e acompanhe livros em uma interface limpa, responsiva e direta ao ponto.
+              Organize, avalie e acompanhe seus livros em um só lugar
             </Typography>
           </Stack>
 
@@ -467,22 +483,46 @@ function App() {
             <Paper className="section-card list-card" elevation={0}>
               <Box className="section-header list-header">
                 <Box>
-                  <Box className="section-title-wrap">
-                    <Box
-                      component="img"
-                      src={`${PUBLIC_URL}/collection.svg`}
-                      alt="Icone de colecao"
-                      className="section-title-icon"
-                    />
-                    <Typography variant="h5" className="section-title">
-                      Acervo
-                    </Typography>
+                  <Box className="list-title-row">
+                    <Box className="section-title-wrap">
+                      <Box
+                        component="img"
+                        src={`${PUBLIC_URL}/collection.svg`}
+                        alt="Icone de colecao"
+                        className="section-title-icon"
+                      />
+                      <Typography variant="h5" className="section-title">
+                        Acervo
+                      </Typography>
+                    </Box>
+                    <Chip label={`${livrosFiltrados.length} itens`} className="list-chip list-chip-mobile" />
                   </Box>
                   <Typography className="section-caption">
                     Lista dos livros já armazenados na base.
                   </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center" className="list-header-actions">
+                    <Stack direction="row" spacing={1} className="filter-pills" role="tablist" aria-label="Filtros de acervo">
+                      {LIST_FILTER_OPTIONS.map((option) => {
+                        const ativo = filtroLista === option.value;
+
+                        return (
+                          <Button
+                            key={option.value}
+                            variant={ativo ? 'contained' : 'outlined'}
+                            size="small"
+                            onClick={() => setFiltroLista(option.value)}
+                            className={`filter-pill ${ativo ? 'filter-pill-active' : ''}`}
+                            role="tab"
+                            aria-selected={ativo}
+                          >
+                            {option.label}
+                          </Button>
+                        );
+                      })}
+                    </Stack>
+                    <Chip label={`${livrosFiltrados.length} itens`} className="list-chip list-chip-desktop" />
+                  </Stack>
                 </Box>
-                <Chip label={`${livros.length} itens`} className="list-chip" />
               </Box>
 
               <Divider className="section-divider" />
@@ -502,15 +542,19 @@ function App() {
                       </CardContent>
                     </Card>
                   ))
-                ) : livros.length === 0 ? (
+                ) : livrosFiltrados.length === 0 ? (
                   <Box className="empty-state">
-                    <Typography variant="h6">Nenhum livro cadastrado ainda</Typography>
+                    <Typography variant="h6">
+                      {livros.length === 0 ? 'Nenhum livro cadastrado ainda' : 'Nenhum livro encontrado nesse filtro'}
+                    </Typography>
                     <Typography>
-                      Use o formulário ao lado para adicionar o primeiro item do acervo.
+                      {livros.length === 0
+                        ? 'Use o formulário ao lado para adicionar o primeiro item do acervo.'
+                        : 'Altere o filtro para visualizar outros livros do acervo.'}
                     </Typography>
                   </Box>
                 ) : (
-                  livros.map((livro, index) => {
+                  livrosFiltrados.map((livro, index) => {
                     const descricao = (livro.descricao || '').trim();
                     const livroId = livro._id || `index-${index}`;
                     const descricaoGrande = descricao.length > 140;

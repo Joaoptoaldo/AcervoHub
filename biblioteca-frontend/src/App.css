@@ -4,12 +4,9 @@
   --bg-ivory: #f7f1e8;
   --bg-cream: #efe3d2;
   --bg-sand: #e4d4c0;
-  --bg-clay: #cfb18a;
   --ink-900: #201812;
   --ink-700: #4f3d2d;
-  --ink-600: #654f3c;
   --accent-700: #7b4d25;
-  --accent-500: #a87442;
   --danger-700: #b3261e;
 }
 
@@ -55,6 +52,9 @@
 .app-container {
   position: relative;
   z-index: 1;
+  max-width: min(97vw, 1500px) !important;
+  padding-left: 115px !important;
+  padding-right: 115px !important;
 }
 
 .hero {
@@ -168,7 +168,6 @@
   align-items: stretch;
 }
 
-.content-grid > .MuiGrid-item,
 .content-grid > * {
   min-width: 0;
   width: 100% !important;
@@ -189,10 +188,6 @@
   backdrop-filter: blur(14px);
   transition: transform 260ms ease, box-shadow 260ms ease, border-color 260ms ease;
   animation: rise-in 760ms ease-out both;
-}
-
-.content-grid > .MuiGrid-item:nth-of-type(2) .section-card {
-  animation-delay: 100ms;
 }
 
 .section-card:hover {
@@ -353,10 +348,63 @@
 }
 
 .list-header {
+  display: block;
+}
+
+.list-title-row {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
+  gap: 12px;
+}
+
+.list-chip-mobile {
+  display: none !important;
+}
+
+.list-chip-desktop {
+  display: inline-flex !important;
+}
+
+.list-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+.filter-pill {
+  min-width: 0 !important;
+  border-radius: 999px !important;
+  border-color: rgba(110, 69, 33, 0.26) !important;
+  color: #5f3e22 !important;
+  background: rgba(255, 255, 255, 0.56) !important;
+  font-weight: 700 !important;
+  text-transform: none !important;
+  transition: transform 180ms ease, background-color 180ms ease, border-color 180ms ease !important;
+}
+
+.filter-pill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(110, 69, 33, 0.42) !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+.filter-pill-active {
+  border-color: transparent !important;
+  color: #fff7ef !important;
+  background: linear-gradient(135deg, #6e4521 0%, #8a5c2f 48%, #a87442 100%) !important;
+  box-shadow: 0 8px 18px rgba(110, 69, 33, 0.26) !important;
 }
 
 .books-stack {
@@ -367,15 +415,6 @@
   overflow: visible;
   padding-right: 4px;
   padding-bottom: 18px;
-}
-
-.books-stack::-webkit-scrollbar {
-  width: 8px;
-}
-
-.books-stack::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(110, 69, 33, 0.24);
 }
 
 .section-divider {
@@ -695,12 +734,29 @@
 }
 
 @media (max-width: 900px) {
+  .app-container {
+    max-width: 100% !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
   .hero {
     grid-template-columns: 1fr;
   }
 
   .content-grid {
     grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .form-card,
+  .list-card {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  .list-card {
+    margin-top: 29px !important;
   }
 
   .books-stack {
@@ -709,19 +765,67 @@
     min-height: 0;
   }
 
-  .book-card-content,
-  .list-header {
+  .book-card-content {
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .list-header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .list-chip-mobile {
+    display: inline-flex !important;
+  }
+
+  .list-chip-desktop {
+    display: none !important;
+  }
+
+  .filter-pills {
+    width: 100%;
+    gap: 6px;
+    justify-content: center;
   }
 
   .book-actions {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .book-date-badge {
+    max-width: calc(100% - 132px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .book-rating-wrap {
+    flex-wrap: wrap;
     align-items: flex-start;
+  }
+
+  .book-rating-number {
+    white-space: normal;
   }
 }
 
 @media (min-width: 901px) {
   .content-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: 96px;
+    row-gap: 25px;
+  }
+
+  .form-card {
+    margin-right: 10px;
+  }
+
+  .list-card {
+    margin-left: 5px;
   }
 }
 
