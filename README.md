@@ -1,6 +1,6 @@
 # AcervoHub
 
-Aplicacao web para cadastro e acompanhamento de livros, com frontend em React e backend em Node.js/Express usando MongoDB.
+Plataforma full stack para gestao de acervo pessoal: permite cadastrar, consultar, editar e remover livros, acompanhar status de leitura (quero ler, lendo, lido), registrar avaliacao, marcar favoritos e organizar o historico em uma interface React integrada a uma API REST em Node.js/Express com persistencia em MongoDB.
 
 ## Visao geral
 

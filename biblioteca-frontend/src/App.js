@@ -367,7 +367,7 @@ function App() {
                   fullWidth
                 />
                 <TextField
-                  label="Ano"
+                  label="Ano de publicação"
                   type="number"
                   value={form.ano}
                   onChange={(event) => setForm({ ...form, ano: event.target.value })}
