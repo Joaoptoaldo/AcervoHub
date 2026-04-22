@@ -176,7 +176,7 @@ Remove um livro pelo identificador.
 2. Configurar `REACT_APP_API_URL` com a URL do backend publicado.
 3. Build command: `npm run build`.
 4. Output directory: `build`.
-
+d
 ### Alternativa de deploy no Render
 
 1. Publicar o backend como Web Service usando `biblioteca-backend`.
@@ -188,3 +188,7 @@ Remove um livro pelo identificador.
 
 - Se o MongoDB nao estiver acessivel, a API responde erro de indisponibilidade para rotas que dependem de banco.
 - Em producao, sempre definir `CORS_ORIGIN` para restringir origem permitida.
+
+## Documentação da API de Autenticação
+
+Consulte o arquivo [AUTH-API.md](AUTH-API.md) para detalhes sobre as rotas de cadastro, login, 2FA e exemplos de uso da autenticação.

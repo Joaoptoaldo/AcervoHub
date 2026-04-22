@@ -2,7 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+
 const app = express();
+
+
+// Rotas de autenticação (cadastro, login, etc)
+const authRoutes = require('./auth.routes');
+// Middlewares de autenticação e autorização
+const { autenticarJWT, autorizarRole } = require('./auth.middleware');
 
 // Em producao (Railway), as vars vem do ambiente. Localmente, tenta carregar .env.
 try {
@@ -11,10 +18,14 @@ try {
     // dotenv e opcional em runtime; segue com variaveis de ambiente do provedor.
 }
 
+
 app.use(express.json());
 app.use(cors({
     origin: process.env.CORS_ORIGIN || '*'
 }));
+
+// Prefixo /auth para rotas de autenticação
+app.use('/auth', authRoutes);
 
 // Conexão com MongoDB
 mongoose.set('bufferCommands', false);
@@ -152,7 +163,9 @@ app.get('/livros', ensureDatabaseConnection, async (req, res) => {
 });
 
 
-app.post('/livros', ensureDatabaseConnection, async (req, res) => {
+
+// Protege criação de livros: exige usuário autenticado
+app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const novoLivro = new Livro(req.body);
         await novoLivro.save();
@@ -172,7 +185,9 @@ app.post('/livros', ensureDatabaseConnection, async (req, res) => {
     }
 });
 
-app.put('/livros/:id', ensureDatabaseConnection, async (req, res) => {
+
+// Protege edição de livros: exige usuário autenticado
+app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroAtualizado = await Livro.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
 
@@ -196,7 +211,9 @@ app.put('/livros/:id', ensureDatabaseConnection, async (req, res) => {
     }
 });
 
-app.delete('/livros/:id', ensureDatabaseConnection, async (req, res) => {
+
+// Protege exclusão de livros: exige usuário autenticado e role admin
+app.delete('/livros/:id', autenticarJWT, autorizarRole('admin'), ensureDatabaseConnection, async (req, res) => {
     try {
         const livroRemovido = await Livro.findByIdAndDelete(req.params.id);
 
