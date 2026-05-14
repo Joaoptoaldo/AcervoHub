@@ -6,16 +6,20 @@ const path = require('path');
 const app = express();
 
 
-// Rotas de autenticação (cadastro, login, etc)
 const authRoutes = require('./auth.routes');
-// Middlewares de autenticação e autorização
 const { autenticarJWT, autorizarRole } = require('./auth.middleware');
+const { getJwtSecret } = require('./jwt.config');
 
-// Em producao (Railway), as vars vem do ambiente. Localmente, tenta carregar .env.
 try {
     require('dotenv').config({ path: path.join(__dirname, '.env') });
 } catch (_) {
-    // dotenv e opcional em runtime; segue com variaveis de ambiente do provedor.
+}
+
+try {
+    getJwtSecret();
+} catch (error) {
+    console.error(error.message);
+    process.exit(1);
 }
 
 
@@ -24,10 +28,8 @@ app.use(cors({
     origin: process.env.CORS_ORIGIN || '*'
 }));
 
-// Prefixo /auth para rotas de autenticação
 app.use('/auth', authRoutes);
 
-// Conexão com MongoDB
 mongoose.set('bufferCommands', false);
 if (!process.env.MONGODB_URI) {
     console.error('MONGODB_URI nao definido. Configure a variavel no Railway.');
@@ -58,7 +60,6 @@ app.get('/', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-// Modelo Livro
 const livroSchema = new mongoose.Schema({
     usuario: {
         type: mongoose.Schema.Types.ObjectId,
@@ -157,7 +158,6 @@ livroSchema.pre('validate', function () {
 const Livro = mongoose.model('Livro', livroSchema);
 
 
-// Rotas
 app.get('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livros = await Livro.find({ usuario: req.usuario.id });
@@ -169,13 +169,12 @@ app.get('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => 
 
 
 
-// Protege criação de livros: exige usuário autenticado
 app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroData = { ...req.body, usuario: req.usuario.id };
         const novoLivro = new Livro(livroData);
         await novoLivro.save();
-        res.json(novoLivro);
+        res.status(201).json(novoLivro);
     } catch (error) {
         console.error('Erro ao salvar livro:', error);
 
@@ -192,7 +191,6 @@ app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) =>
 });
 
 
-// Protege edição de livros: exige usuário autenticado
 app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroAtualizado = await Livro.findOneAndUpdate(
@@ -222,7 +220,6 @@ app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res)
 });
 
 
-// Protege exclusão de livros: exige usuário autenticado e dono do livro
 app.delete('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroRemovido = await Livro.findOneAndDelete({ _id: req.params.id, usuario: req.usuario.id });
@@ -238,6 +235,6 @@ app.delete('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, r
 });
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, () => console.log(`Servidor rodando na porta ${PORT}`));

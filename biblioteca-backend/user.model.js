@@ -1,5 +1,3 @@
-// Modelo de Usuário para autenticação forte no AcervoHub
-// Segue boas práticas de segurança e arquitetura do projeto
 
 const mongoose = require('mongoose');
 

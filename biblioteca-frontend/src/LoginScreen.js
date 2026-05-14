@@ -105,7 +105,7 @@ const LoginScreen = ({ onSuccess }) => {
               fullWidth
               required
             />
-            
+
             {error && (
               <Alert severity="error" sx={{ mt: 1, borderRadius: '12px' }}>
                 {error}
@@ -124,7 +124,7 @@ const LoginScreen = ({ onSuccess }) => {
           </Box>
 
           <Divider className="section-divider" sx={{ my: 3 }} />
-          
+
           <Box sx={{ textAlign: 'center' }}>
             <Button
               onClick={() => {

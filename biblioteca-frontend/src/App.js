@@ -18,6 +18,8 @@ import {
   TextField,
   Typography
 } from '@mui/material';
+
+
 import { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import LoginScreen from './LoginScreen';
@@ -108,12 +110,10 @@ const truncarDescricao = (descricao, limite = 140) => {
 
 
 function App() {
-  // Auth states
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [user, setUser] = useState(null);
 
-  // Check auth on load
   useEffect(() => {
     const token = getToken();
     if (token) {
@@ -133,7 +133,6 @@ function App() {
     }
   }, []);
 
-  // App states
   const [livros, setLivros] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState({
@@ -190,14 +189,12 @@ function App() {
   }, []);
 
 
-  // Carregar livros
   useEffect(() => {
     if (isAuthenticated) {
       carregarLivros({ mostrarErro: true });
     }
   }, [carregarLivros, isAuthenticated]);
 
-  // Adicionar ou atualizar livro
   const adicionarOuAtualizarLivro = async (event) => {
     event.preventDefault();
 
@@ -238,7 +235,7 @@ function App() {
       const token = getToken();
       const resposta = await fetch(url, {
         method,
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           ...(token && { Authorization: `Bearer ${token}` }),
         },
@@ -364,11 +361,10 @@ function App() {
   return (
     <Box className="app-shell">
       <Container maxWidth="lg" className="app-container">
-        
-        {/* Top Header com Logo e Informações do Usuário */}
+
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Chip label="AcervoHub" className="hero-chip" />
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
             <Typography variant="body1" sx={{ color: 'var(--ink-700)', fontSize: '1.29rem' }}>
               Olá, <strong>{user?.nome?.split(' ')[0] || 'Usuário'}</strong>

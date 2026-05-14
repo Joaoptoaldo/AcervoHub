@@ -1,9 +1,13 @@
 {
   "scripts": {
     "start": "npm --prefix biblioteca-backend start",
-    "postinstall": "npm --prefix biblioteca-backend install" 
+    "dev": "concurrently \"npm --prefix biblioteca-backend start\" \"npm --prefix biblioteca-frontend start\"",
+    "postinstall": "npm --prefix biblioteca-backend install"
   },
   "dependencies": {
     "dotenv": "^17.4.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

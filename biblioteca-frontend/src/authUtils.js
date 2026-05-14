@@ -1,5 +1,3 @@
-// authUtils.js - Utilitários autenticação AcervoHub
-// Arquitetura: JWT localStorage + rotas /auth (AUTH-API.md)
 
 export const getToken = () => localStorage.getItem('acervo_token') || null;
 

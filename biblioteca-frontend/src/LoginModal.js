@@ -1,8 +1,3 @@
-// LoginModal.js - Modal autenticação AcervoHub
-// Modular: props onClose, onSuccess. Integra backend /auth (AUTH-API.md)
-// Reutilizável, acessível, responsivo
-
-// import CloseIcon from '@mui/icons-material/Close'; // Opcional - usar text "X" ou span
 
 import {
   Alert,
@@ -16,6 +11,7 @@ import {
   IconButton,
   TextField
 } from '@mui/material';
+
 import { useState } from 'react';
 
 const LoginModal = ({ open, onClose, onSuccess }) => {
@@ -45,12 +41,10 @@ const LoginModal = ({ open, onClose, onSuccess }) => {
         throw new Error(data.erro || 'Erro na autenticação');
       }
 
-      // Login retorna token
       if (isLogin && data.token) {
         localStorage.setItem('acervo_token', data.token);
         onSuccess(data.token);
       } else {
-        // Cadastro sucesso, fecha modal
         onSuccess();
       }
 
