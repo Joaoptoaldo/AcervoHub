@@ -60,6 +60,11 @@ app.get('/', (req, res) => {
 
 // Modelo Livro
 const livroSchema = new mongoose.Schema({
+    usuario: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: [true, 'O usuario dono do livro é obrigatorio.']
+    },
     titulo: {
         type: String,
         required: [true, 'Titulo e obrigatorio.'],
@@ -153,9 +158,9 @@ const Livro = mongoose.model('Livro', livroSchema);
 
 
 // Rotas
-app.get('/livros', ensureDatabaseConnection, async (req, res) => {
+app.get('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
-        const livros = await Livro.find();
+        const livros = await Livro.find({ usuario: req.usuario.id });
         res.json(livros);
     } catch (error) {
         res.status(500).json({ erro: 'Erro ao buscar livros.' });
@@ -167,7 +172,8 @@ app.get('/livros', ensureDatabaseConnection, async (req, res) => {
 // Protege criação de livros: exige usuário autenticado
 app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
-        const novoLivro = new Livro(req.body);
+        const livroData = { ...req.body, usuario: req.usuario.id };
+        const novoLivro = new Livro(livroData);
         await novoLivro.save();
         res.json(novoLivro);
     } catch (error) {
@@ -189,10 +195,14 @@ app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) =>
 // Protege edição de livros: exige usuário autenticado
 app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
-        const livroAtualizado = await Livro.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const livroAtualizado = await Livro.findOneAndUpdate(
+            { _id: req.params.id, usuario: req.usuario.id },
+            req.body,
+            { new: true, runValidators: true }
+        );
 
         if (!livroAtualizado) {
-            return res.status(404).json({ erro: 'Livro nao encontrado.' });
+            return res.status(404).json({ erro: 'Livro nao encontrado ou sem permissao.' });
         }
 
         res.json(livroAtualizado);
@@ -212,13 +222,13 @@ app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res)
 });
 
 
-// Protege exclusão de livros: exige usuário autenticado e role admin
-app.delete('/livros/:id', autenticarJWT, autorizarRole('admin'), ensureDatabaseConnection, async (req, res) => {
+// Protege exclusão de livros: exige usuário autenticado e dono do livro
+app.delete('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
-        const livroRemovido = await Livro.findByIdAndDelete(req.params.id);
+        const livroRemovido = await Livro.findOneAndDelete({ _id: req.params.id, usuario: req.usuario.id });
 
         if (!livroRemovido) {
-            return res.status(404).json({ erro: 'Livro nao encontrado.' });
+            return res.status(404).json({ erro: 'Livro nao encontrado ou sem permissao.' });
         }
 
         res.json({ mensagem: 'Livro removido com sucesso.' });

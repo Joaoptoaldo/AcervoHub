@@ -16,10 +16,13 @@ import {
   Stack,
   Switch,
   TextField,
-  Typography,
+  Typography
 } from '@mui/material';
 import { useCallback, useEffect, useState } from 'react';
 import './App.css';
+import LoginScreen from './LoginScreen';
+import { getMe, logout } from './authApi';
+import { getToken } from './authUtils';
 
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
@@ -105,6 +108,32 @@ const truncarDescricao = (descricao, limite = 140) => {
 
 
 function App() {
+  // Auth states
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [user, setUser] = useState(null);
+
+  // Check auth on load
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      getMe()
+        .then((userData) => {
+          setIsAuthenticated(true);
+          setUser(userData);
+        })
+        .catch(() => {
+          localStorage.removeItem('acervo_token');
+        })
+        .finally(() => {
+          setIsAuthLoading(false);
+        });
+    } else {
+      setIsAuthLoading(false);
+    }
+  }, []);
+
+  // App states
   const [livros, setLivros] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [feedback, setFeedback] = useState({
@@ -138,7 +167,12 @@ function App() {
 
   const carregarLivros = useCallback(async ({ mostrarErro = false } = {}) => {
     try {
-      const resposta = await fetch(`${API_BASE_URL}/livros`);
+      const token = getToken();
+      const resposta = await fetch(`${API_BASE_URL}/livros`, {
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
 
       if (!resposta.ok) {
         throw new Error('Falha ao buscar livros.');
@@ -158,8 +192,10 @@ function App() {
 
   // Carregar livros
   useEffect(() => {
-    carregarLivros({ mostrarErro: true });
-  }, [carregarLivros]);
+    if (isAuthenticated) {
+      carregarLivros({ mostrarErro: true });
+    }
+  }, [carregarLivros, isAuthenticated]);
 
   // Adicionar ou atualizar livro
   const adicionarOuAtualizarLivro = async (event) => {
@@ -198,10 +234,14 @@ function App() {
     try {
       const url = editandoId ? `${API_BASE_URL}/livros/${editandoId}` : `${API_BASE_URL}/livros`;
       const method = editandoId ? 'PUT' : 'POST';
-      
+
+      const token = getToken();
       const resposta = await fetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
         body: JSON.stringify(payload)
       });
 
@@ -279,8 +319,12 @@ function App() {
     }
 
     try {
+      const token = getToken();
       await fetch(`${API_BASE_URL}/livros/${id}`, {
         method: 'DELETE',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
       });
 
       await carregarLivros({ mostrarErro: true });
@@ -298,12 +342,66 @@ function App() {
     return (livro.statusLeitura || 'QUERO_LER').toUpperCase() === filtroLista;
   });
 
+  if (isAuthLoading) {
+    return (
+      <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography>Carregando...</Typography>
+      </Box>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <LoginScreen
+        onSuccess={(token) => {
+          setIsAuthenticated(true);
+          getMe().then(setUser);
+        }}
+      />
+    );
+  }
+
   return (
     <Box className="app-shell">
       <Container maxWidth="lg" className="app-container">
+        
+        {/* Top Header com Logo e Informações do Usuário */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Chip label="AcervoHub" className="hero-chip" />
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
+            <Typography variant="body1" sx={{ color: 'var(--ink-700)', fontSize: '1.29rem' }}>
+              Olá, <strong>{user?.nome?.split(' ')[0] || 'Usuário'}</strong>
+            </Typography>
+            <Button
+              variant="outlined"
+              onClick={() => {
+                logout();
+                setIsAuthenticated(false);
+                setUser(null);
+                exibirFeedback('Logout realizado');
+              }}
+              size="medium"
+              sx={{
+                color: 'var(--ink-700)',
+                borderColor: 'rgba(61, 41, 23, 0.2)',
+                borderRadius: 2,
+                padding: '4px 16px',
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                '&:hover': {
+                  borderColor: 'rgba(61, 41, 23, 0.5)',
+                  backgroundColor: 'rgba(61, 41, 23, 0.05)'
+                }
+              }}
+            >
+              Sair
+            </Button>
+          </Box>
+        </Box>
+
         <Box className="hero">
           <Stack spacing={2}>
-            <Chip label="AcervoHub" className="hero-chip" />
             <Box className="hero-title-wrap">
               <Box
                 component="img"
@@ -569,81 +667,81 @@ function App() {
                         variant="outlined"
                       >
                         <CardContent className="book-card-content">
-                        <Box className="book-actions">
-                          <Box className="book-date-badge">
-                            adicionado em {formatarDataCadastro(livro.dataCadastro)}
-                          </Box>
-                          <Stack direction="row" spacing={0.5}>
-                            <Button
-                              variant="text"
-                              size="small"
-                              className="book-edit-button"
-                              onClick={() => editarLivro(livro)}
-                            >
-                              editar
-                            </Button>
-                            <Button
-                              variant="text"
-                              size="small"
-                              color="error"
-                              className="book-delete-button"
-                              onClick={() => excluirLivro(livro._id)}
-                            >
-                              excluir
-                            </Button>
-                          </Stack>
-                        </Box>
-                        <Box className="book-main">
-                          <Stack direction="row" spacing={1} className="book-headline-chips" flexWrap="wrap">
-                            <Chip label={getLabelStatusLeitura(livro.statusLeitura)} size="small" className="status-chip" />
-                            {livro.favorito ? <Chip label="favorito" size="small" className="favorite-chip" /> : null}
-                          </Stack>
-
-                          <Typography variant="h6" className="book-title">
-                            {livro.titulo}
-                          </Typography>
-                          <Typography className="book-author">
-                            {livro.autor}
-                          </Typography>
-
-                          <Stack direction="row" spacing={1} alignItems="center" className="book-rating-wrap">
-                            <Rating value={notaLivro || 0} precision={0.5} readOnly />
-                            <Typography className="book-rating-number">
-                              {notaLivro ? `${notaLivro.toFixed(1)} / 5` : 'sem nota'}
-                            </Typography>
-                          </Stack>
-
-                          <Typography className="book-reading-date">
-                            leitura: {formatarDataLeitura(livro.dataLeitura)}
-                          </Typography>
-
-                          {descricao ? (
-                            <Box className="book-description-wrap">
-                              <Typography className="book-description">
-                                {descricaoExibida}
-                              </Typography>
-
-                              {descricaoGrande ? (
-                                <Button
-                                  variant="text"
-                                  size="small"
-                                  className="book-see-more"
-                                  onClick={() => alternarDescricao(livroId)}
-                                >
-                                  {descricaoExpandida ? 'ver menos' : 'ver mais'}
-                                </Button>
-                              ) : null}
+                          <Box className="book-actions">
+                            <Box className="book-date-badge">
+                              adicionado em {formatarDataCadastro(livro.dataCadastro)}
                             </Box>
-                          ) : null}
-                        </Box>
+                            <Stack direction="row" spacing={0.5}>
+                              <Button
+                                variant="text"
+                                size="small"
+                                className="book-edit-button"
+                                onClick={() => editarLivro(livro)}
+                              >
+                                editar
+                              </Button>
+                              <Button
+                                variant="text"
+                                size="small"
+                                color="error"
+                                className="book-delete-button"
+                                onClick={() => excluirLivro(livro._id)}
+                              >
+                                excluir
+                              </Button>
+                            </Stack>
+                          </Box>
+                          <Box className="book-main">
+                            <Stack direction="row" spacing={1} className="book-headline-chips" flexWrap="wrap">
+                              <Chip label={getLabelStatusLeitura(livro.statusLeitura)} size="small" className="status-chip" />
+                              {livro.favorito ? <Chip label="favorito" size="small" className="favorite-chip" /> : null}
+                            </Stack>
 
-                        <Stack direction="row" spacing={1} className="book-tags" flexWrap="wrap">
-                          <Chip
-                            label={`${livro.ano} ${(livro.era || 'DC') === 'AC' ? 'a.C.' : 'd.C.'}`}
-                            size="small"
-                          />
-                          <Chip label={livro.genero} size="small" variant="outlined" />
-                        </Stack>
+                            <Typography variant="h6" className="book-title">
+                              {livro.titulo}
+                            </Typography>
+                            <Typography className="book-author">
+                              {livro.autor}
+                            </Typography>
+
+                            <Stack direction="row" spacing={1} alignItems="center" className="book-rating-wrap">
+                              <Rating value={notaLivro || 0} precision={0.5} readOnly />
+                              <Typography className="book-rating-number">
+                                {notaLivro ? `${notaLivro.toFixed(1)} / 5` : 'sem nota'}
+                              </Typography>
+                            </Stack>
+
+                            <Typography className="book-reading-date">
+                              leitura: {formatarDataLeitura(livro.dataLeitura)}
+                            </Typography>
+
+                            {descricao ? (
+                              <Box className="book-description-wrap">
+                                <Typography className="book-description">
+                                  {descricaoExibida}
+                                </Typography>
+
+                                {descricaoGrande ? (
+                                  <Button
+                                    variant="text"
+                                    size="small"
+                                    className="book-see-more"
+                                    onClick={() => alternarDescricao(livroId)}
+                                  >
+                                    {descricaoExpandida ? 'ver menos' : 'ver mais'}
+                                  </Button>
+                                ) : null}
+                              </Box>
+                            ) : null}
+                          </Box>
+
+                          <Stack direction="row" spacing={1} className="book-tags" flexWrap="wrap">
+                            <Chip
+                              label={`${livro.ano} ${(livro.era || 'DC') === 'AC' ? 'a.C.' : 'd.C.'}`}
+                              size="small"
+                            />
+                            <Chip label={livro.genero} size="small" variant="outlined" />
+                          </Stack>
                         </CardContent>
                       </Card>
                     );

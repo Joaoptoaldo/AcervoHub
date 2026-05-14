@@ -49,10 +49,13 @@ Este documento define como a IA deve interagir, sugerir e modificar o projeto Ac
 AcervoHub/
 ├── biblioteca-backend/   # API REST Node.js/Express/Mongoose
 │   ├── server.js
+│   ├── user.model.js
+│   ├── auth.routes.js
 │   └── package.json
 ├── biblioteca-frontend/  # React 19 + Material UI
 │   ├── src/
 │   │   ├── App.js
+│   │   ├── LoginScreen.js
 │   │   ├── App.css
 │   │   └── ...
 │   ├── public/
@@ -121,5 +124,6 @@ AcervoHub/
 
 ### Regras específicas de autenticação e segurança
 - Sempre priorize autenticação forte: cadastro/login seguro (hash de senha, JWT), controle de roles (admin, usuário, etc.) e 2FA (autenticação em dois fatores, por e-mail ou app autenticador).
+- Sempre garanta o isolamento de dados no banco (ex: filtrar consultas por usuário logado) para proteger a privacidade de cada acervo.
 - Nunca implemente autenticação fraca ou sem criptografia adequada.
 - Sempre explique riscos e melhores práticas ao sugerir mudanças de segurança.

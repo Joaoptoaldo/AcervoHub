@@ -11,6 +11,8 @@ O projeto esta dividido em dois apps:
 
 ## Funcionalidades atuais
 
+- Sistema completo de Autenticação (Login, Cadastro com hash bcrypt, JWT).
+- Bibliotecas Privadas: Isolamento de dados no banco (cada usuário acessa e gerencia apenas seu próprio acervo).
 - Cadastro, listagem, edicao e exclusao de livros.
 - Filtros rapidos por status na listagem:
 	- `Todos`
@@ -68,7 +70,7 @@ npm install
 npm start
 ```
 
-Backend padrao em `http://localhost:3000`.
+Backend padrão configurado na porta `3001` (`http://localhost:3001`).
 
 ### 2. Frontend
 
@@ -79,7 +81,7 @@ npm install
 npm start
 ```
 
-Se a porta 3000 estiver ocupada, o React pode subir em outra porta (geralmente `3001`).
+Frontend padrão rodando em `http://localhost:3000`.
 
 ### 3. Atalho no root
 
@@ -97,12 +99,12 @@ Esse comando inicia apenas o backend (atalho para `npm --prefix biblioteca-backe
 
 - `MONGODB_URI`: string de conexao do MongoDB Atlas.
 - `CORS_ORIGIN`: origem permitida no CORS (URL do frontend publicado).
-- `PORT`: porta da API (opcional; default local 3000).
+- `PORT`: porta da API (recomendado `3001` local).
 
 ### Frontend
 
 - `REACT_APP_API_URL`: URL da API.
-	- fallback local: `http://localhost:3000`
+	- fallback local: `http://localhost:3001`
 
 ## API
 
@@ -116,11 +118,11 @@ Health-check simples:
 
 ### `GET /livros`
 
-Retorna todos os livros.
+Retorna todos os livros do usuário autenticado. Requer cabeçalho `Authorization: Bearer <token>`.
 
 ### `POST /livros`
 
-Cria um livro.
+Cria um livro no acervo privado do usuário autenticado. Requer cabeçalho `Authorization: Bearer <token>`.
 
 Exemplo de payload completo:
 
@@ -153,7 +155,7 @@ Payload minimo valido:
 
 ### `DELETE /livros/:id`
 
-Remove um livro pelo identificador.
+Remove um livro do usuário autenticado pelo identificador. Requer cabeçalho `Authorization: Bearer <token>`.
 
 ## Regras de validacao (backend)
 
@@ -189,6 +191,118 @@ d
 - Se o MongoDB nao estiver acessivel, a API responde erro de indisponibilidade para rotas que dependem de banco.
 - Em producao, sempre definir `CORS_ORIGIN` para restringir origem permitida.
 
-## Documentação da API de Autenticação
+## API de Autenticação – AcervoHub
 
-Consulte o arquivo [AUTH-API.md](AUTH-API.md) para detalhes sobre as rotas de cadastro, login, 2FA e exemplos de uso da autenticação.
+Este documento descreve as rotas de autenticação do backend do AcervoHub, exemplos de uso e payloads esperados.
+
+---
+
+### Cadastro de Usuário
+**POST /auth/cadastro**
+
+Body (JSON):
+```
+{
+  "nome": "João da Silva",
+  "email": "joao@email.com",
+  "senha": "senhaSegura123"
+}
+```
+Resposta:
+- 201: { "mensagem": "Usuário cadastrado com sucesso." }
+- 409: { "erro": "E-mail já cadastrado." }
+
+---
+
+### Login
+**POST /auth/login**
+
+Body (JSON):
+```
+{
+  "email": "joao@email.com",
+  "senha": "senhaSegura123"
+}
+```
+Se 2FA estiver ativado, inclua:
+```
+{
+  "codigo2fa": "123456"
+}
+```
+Resposta:
+- 200: { "token": "JWT_AQUI", "usuario": { ... } }
+- 401: { "erro": "Credenciais inválidas." }
+
+---
+
+### Ativar 2FA
+**POST /auth/ativar-2fa**
+
+Body (JSON):
+```
+{
+  "email": "joao@email.com",
+  "senha": "senhaSegura123"
+}
+```
+Resposta:
+- 200: { "secret": "BASE32SECRET", "otpauth_url": "otpauth://..." }
+
+---
+
+### Confirmar 2FA
+**POST /auth/confirmar-2fa**
+
+Body (JSON):
+```
+{
+  "email": "joao@email.com",
+  "senha": "senhaSegura123",
+  "codigo2fa": "123456"
+}
+```
+Resposta:
+- 200: { "mensagem": "2FA ativado com sucesso." }
+
+---
+
+### Desativar 2FA
+**POST /auth/desativar-2fa**
+
+Body (JSON):
+```
+{
+  "email": "joao@email.com",
+  "senha": "senhaSegura123"
+}
+```
+Resposta:
+- 200: { "mensagem": "2FA desativado." }
+
+---
+
+### Promover usuário a admin
+**PATCH /auth/promover-admin**
+
+- Apenas um admin autenticado pode acessar esta rota.
+- Envie o token JWT de admin no header Authorization.
+
+Body (JSON):
+```
+{
+  "email": "usuario@email.com"
+}
+```
+Resposta:
+- 200: { "mensagem": "Usuário usuario@email.com promovido a admin com sucesso." }
+- 404: { "erro": "Usuário não encontrado." }
+- 403: { "erro": "Acesso negado: permissão insuficiente." }
+
+---
+
+### Observações de Autenticação
+- Para rotas protegidas (ex: criar, editar, deletar livros), envie o header:
+  Authorization: Bearer JWT_AQUI
+- Qualquer usuário autenticado tem permissão para criar, editar e excluir os SEUS próprios livros.
+- O JWT é válido por 2 horas.

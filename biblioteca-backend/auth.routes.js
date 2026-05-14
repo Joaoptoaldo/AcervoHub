@@ -185,6 +185,24 @@ router.post('/desativar-2fa', async (req, res) => {
 });
 
 
+// GET /auth/me - Retorna usuário logado (sem senha)
+router.get('/me', autenticarJWT, async (req, res) => {
+  try {
+    const usuario = await User.findById(req.usuario.id).select('-senha -twoFA');
+    if (!usuario) {
+      return res.status(404).json({ erro: 'Usuário não encontrado.' });
+    }
+    res.json({
+      id: usuario._id,
+      nome: usuario.nome,
+      email: usuario.email,
+      role: usuario.role
+    });
+  } catch (error) {
+    res.status(500).json({ erro: 'Erro ao buscar usuário.' });
+  }
+});
+
 // Promover usuário a admin (apenas admin pode promover)
 // Exemplo de uso: PATCH /auth/promover-admin { email: "alvo@email.com" }
 router.patch('/promover-admin', autenticarJWT, autorizarRole('admin'), async (req, res) => {
@@ -206,6 +224,6 @@ router.patch('/promover-admin', autenticarJWT, autorizarRole('admin'), async (re
   } catch (error) {
     res.status(500).json({ erro: 'Erro ao promover usuário.' });
   }
-});  
+});
 
 module.exports = router;
