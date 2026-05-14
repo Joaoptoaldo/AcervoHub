@@ -5,7 +5,7 @@ const path = require('path');
 
 const app = express();
 
-
+// importa rotas de autenticacao e middlewares de seguranca
 const authRoutes = require('./auth.routes');
 const { autenticarJWT, autorizarRole } = require('./auth.middleware');
 const { getJwtSecret } = require('./jwt.config');
@@ -60,7 +60,9 @@ app.get('/', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+// schema de livro com isolamento por usuario
 const livroSchema = new mongoose.Schema({
+    // usuario que possui este livro (fundamental para privacidade)
     usuario: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
@@ -155,9 +157,11 @@ livroSchema.pre('validate', function () {
     }
 });
 
+// valida e normaliza dados antes de salvar (converte strings para tipos corretos)
 const Livro = mongoose.model('Livro', livroSchema);
 
 
+// busca apenas livros do usuario autenticado (isolamento de dados)
 app.get('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livros = await Livro.find({ usuario: req.usuario.id });
@@ -169,6 +173,7 @@ app.get('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => 
 
 
 
+// associa livro ao usuario autenticado automaticamente
 app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroData = { ...req.body, usuario: req.usuario.id };
@@ -191,6 +196,7 @@ app.post('/livros', autenticarJWT, ensureDatabaseConnection, async (req, res) =>
 });
 
 
+// valida se livro pertence ao usuario antes de atualizar
 app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
         const livroAtualizado = await Livro.findOneAndUpdate(
@@ -219,9 +225,10 @@ app.put('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res)
     }
 });
 
-
+// deleta livro validando propriedade do usuario
 app.delete('/livros/:id', autenticarJWT, ensureDatabaseConnection, async (req, res) => {
     try {
+        // busca e remove livro apenas se pertence ao usuario
         const livroRemovido = await Livro.findOneAndDelete({ _id: req.params.id, usuario: req.usuario.id });
 
         if (!livroRemovido) {

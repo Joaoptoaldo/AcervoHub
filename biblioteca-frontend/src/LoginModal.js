@@ -1,4 +1,4 @@
-
+// componente de modal para login e cadastro de usuários
 import {
   Alert,
   Box,

@@ -1,3 +1,5 @@
+# Dockerfile para o frontend da aplicação, utilizando Node.js para build e Nginx para servir os arquivos estáticos
+
 FROM node:18-alpine AS build
 WORKDIR /app
 COPY package*.json ./

@@ -1,10 +1,10 @@
+// testes para jwt.config.js
 const path = require('path');
 
 describe('getJwtSecret behavior', () => {
   const MODULE_PATH = path.resolve(__dirname, '..', 'jwt.config.js');
 
   beforeEach(() => {
-    // clear cached module to allow re-requiring with different env
     jest.resetModules();
   });
 

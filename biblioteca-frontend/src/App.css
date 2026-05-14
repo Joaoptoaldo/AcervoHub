@@ -68,10 +68,14 @@
 
 .hero-chip {
   align-self: flex-start;
-  background: rgba(39, 45, 52, 0.1) !important;
+  background: transparent !important;
   color: #2b241d !important;
   font-weight: 700 !important;
-  transition: transform 200ms ease, box-shadow 220ms ease, background-color 220ms ease !important;
+  font-size: 1.8rem !important;
+  padding: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: transform 200ms ease !important;
 }
 
 .list-chip {
@@ -83,8 +87,8 @@
 
 .hero-chip:hover {
   transform: translateY(-1px);
-  background: rgba(39, 45, 52, 0.13) !important;
-  box-shadow: 0 8px 18px rgba(32, 25, 19, 0.12) !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .hero-title {
@@ -809,6 +813,10 @@
     padding-right: 18px !important;
   }
 
+  .app-container > div:first-child {
+    margin-bottom: 60px !important;
+  }
+
   .hero .MuiStack-root {
     align-items: center;
     text-align: center;
@@ -954,6 +962,10 @@
 @media (max-width: 600px) {
   .app-shell {
     padding-top: 20px;
+  }
+
+  .app-container > div:first-child {
+    margin-bottom: 80px !important;
   }
 
   .app-footer {

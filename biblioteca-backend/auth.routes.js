@@ -10,6 +10,7 @@ const User = require('./user.model');
 
 const router = express.Router();
 
+// cria nova conta de usuario
 router.post('/cadastro', async (req, res) => {
   try {
     const { nome, email, senha } = req.body;
@@ -23,6 +24,7 @@ router.post('/cadastro', async (req, res) => {
       return res.status(409).json({ erro: 'E-mail já cadastrado.' });
     }
 
+    // criptografa senha com bcrypt antes de salvar
     const hashSenha = await bcrypt.hash(senha, 12);
 
     const novoUsuario = new User({ nome, email, senha: hashSenha });
@@ -34,7 +36,7 @@ router.post('/cadastro', async (req, res) => {
   }
 });
 
-
+// autentica usuario e retorna token jwt
 router.post('/login', async (req, res) => {
   try {
     const { email, senha, codigo2fa } = req.body;
@@ -48,11 +50,13 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ erro: 'Credenciais inválidas.' });
     }
 
+    // compara senha fornecida com hash no banco
     const senhaCorreta = await bcrypt.compare(senha, usuario.senha);
     if (!senhaCorreta) {
       return res.status(401).json({ erro: 'Credenciais inválidas.' });
     }
 
+    // se usuario tem 2fa ativado, valida codigo
     if (usuario.twoFA.ativado) {
       if (!codigo2fa) {
         return res.status(401).json({ erro: 'Código 2FA obrigatório.' });
@@ -68,6 +72,7 @@ router.post('/login', async (req, res) => {
       }
     }
 
+    // gera token jwt com dados do usuario (expira em 2h)
     const token = jwt.sign(
       {
         id: usuario._id,
@@ -99,6 +104,7 @@ router.post('/ativar-2fa', async (req, res) => {
     if (!senhaCorreta) {
       return res.status(401).json({ erro: 'Credenciais inválidas.' });
     }
+    // gera secret base32 e url otpauth para ler no app autenticador
     const secret = speakeasy.generateSecret({ name: `AcervoHub (${usuario.email})` });
     usuario.twoFA.ativado = false;
     usuario.twoFA.secret = secret.base32;
@@ -109,6 +115,7 @@ router.post('/ativar-2fa', async (req, res) => {
   }
 });
 
+// ativa 2fa apos validar codigo totp
 router.post('/confirmar-2fa', async (req, res) => {
   try {
     const { email, senha, codigo2fa } = req.body;
@@ -139,6 +146,7 @@ router.post('/confirmar-2fa', async (req, res) => {
     res.status(500).json({ erro: 'Erro ao confirmar 2FA.' });
   }
 });
+// desativa 2fa do usuario
 
 router.post('/desativar-2fa', async (req, res) => {
   try {
@@ -163,9 +171,10 @@ router.post('/desativar-2fa', async (req, res) => {
   }
 });
 
-
+// retorna dados do usuario autenticado (sem senha ou 2fa por seguranca)
 router.get('/me', autenticarJWT, async (req, res) => {
   try {
+    // busca usuario e exclui campos sensíveis
     const usuario = await User.findById(req.usuario.id).select('-senha -twoFA');
     if (!usuario) {
       return res.status(404).json({ erro: 'Usuário não encontrado.' });
@@ -181,6 +190,7 @@ router.get('/me', autenticarJWT, async (req, res) => {
   }
 });
 
+// promove usuario para admin (apenas admin pode fazer)
 router.patch('/promover-admin', autenticarJWT, autorizarRole('admin'), async (req, res) => {
   try {
     const { email } = req.body;

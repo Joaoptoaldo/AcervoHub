@@ -26,7 +26,7 @@ import LoginScreen from './LoginScreen';
 import { getMe, logout } from './authApi';
 import { getToken } from './authUtils';
 
-
+// verifica se usuario tem token valido salvo
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 const STATUS_OPTIONS = [
@@ -114,15 +114,18 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [user, setUser] = useState(null);
 
+  // verifica se usuario tem token valido ao abrir app
   useEffect(() => {
     const token = getToken();
     if (token) {
+      // tenta validar token com backend
       getMe()
         .then((userData) => {
           setIsAuthenticated(true);
           setUser(userData);
         })
         .catch(() => {
+          // se token invalido, remove do localStorage
           localStorage.removeItem('acervo_token');
         })
         .finally(() => {
@@ -167,6 +170,7 @@ function App() {
   const carregarLivros = useCallback(async ({ mostrarErro = false } = {}) => {
     try {
       const token = getToken();
+      // busca apenas livros do usuario autenticado (isolamento de dados no backend)
       const resposta = await fetch(`${API_BASE_URL}/livros`, {
         headers: {
           ...(token && { Authorization: `Bearer ${token}` }),
@@ -195,6 +199,7 @@ function App() {
     }
   }, [carregarLivros, isAuthenticated]);
 
+  // cria ou atualiza livro apos validar dados
   const adicionarOuAtualizarLivro = async (event) => {
     event.preventDefault();
 
@@ -202,6 +207,7 @@ function App() {
     const statusLeituraNormalizado = (form.statusLeitura || 'QUERO_LER').toUpperCase();
     const notaNormalizada = form.nota === '' ? null : Number.parseFloat(form.nota);
 
+    // valida ano inteiro >= 1
     if (!Number.isInteger(anoNormalizado) || anoNormalizado < 1) {
       window.alert('Informe um ano inteiro maior ou igual a 1 e selecione a era correta (a.C. ou d.C.).');
       return;
@@ -292,6 +298,7 @@ function App() {
     document.querySelector('.form-stack')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // limpa formulario e cancela edicao
   const cancelarEdicao = () => {
     setForm({
       titulo: '',
@@ -308,6 +315,7 @@ function App() {
     setEditandoId(null);
   };
 
+  // deleta livro apos confirmacao do usuario
   const excluirLivro = async (id) => {
     const confirmarExclusao = window.confirm('Excluir este livro permanentemente?');
 
@@ -317,6 +325,7 @@ function App() {
 
     try {
       const token = getToken();
+      // envia requisicao DELETE ao backend (valida propriedade no backend)
       await fetch(`${API_BASE_URL}/livros/${id}`, {
         method: 'DELETE',
         headers: {
@@ -347,6 +356,7 @@ function App() {
     );
   }
 
+  // renderiza tela de login se nao autenticado
   if (!isAuthenticated) {
     return (
       <LoginScreen
@@ -358,6 +368,7 @@ function App() {
     );
   }
 
+  // renderiza dashboard com biblioteca privada do usuario
   return (
     <Box className="app-shell">
       <Container maxWidth="lg" className="app-container">
@@ -365,8 +376,24 @@ function App() {
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
           <Chip label="AcervoHub" className="hero-chip" />
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2.5 }}>
-            <Typography variant="body1" sx={{ color: 'var(--ink-700)', fontSize: '1.29rem' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2.5,
+              flexDirection: { xs: 'column-reverse', sm: 'row' },
+              alignItems: { xs: 'flex-end', sm: 'center' },
+              gap: { xs: 1, sm: 2.5 },
+            }}
+          >
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'var(--ink-700)',
+                fontSize: '1.29rem',
+                textAlign: { xs: 'right', sm: 'left' },
+              }}
+            >
               Olá, <strong>{user?.nome?.split(' ')[0] || 'Usuário'}</strong>
             </Typography>
             <Button
@@ -379,15 +406,20 @@ function App() {
               }}
               size="medium"
               sx={{
-                color: 'var(--ink-700)',
-                borderColor: 'rgba(61, 41, 23, 0.2)',
+                color: '#ffffff',
+                borderColor: 'rgba(61, 41, 23, 0.45)',
+                backgroundColor: 'rgba(61, 41, 23, 0.72)',
                 borderRadius: 2,
-                padding: '4px 16px',
+                padding: '6px 18px',
+                minWidth: '78px',
+                fontWeight: 700,
                 textTransform: 'none',
                 fontSize: '0.95rem',
+                boxShadow: '0 8px 18px rgba(61, 41, 23, 0.18)',
                 '&:hover': {
-                  borderColor: 'rgba(61, 41, 23, 0.5)',
-                  backgroundColor: 'rgba(61, 41, 23, 0.05)'
+                  borderColor: 'rgba(61, 41, 23, 0.65)',
+                  backgroundColor: 'rgba(61, 41, 23, 0.88)',
+                  boxShadow: '0 10px 22px rgba(61, 41, 23, 0.24)'
                 }
               }}
             >

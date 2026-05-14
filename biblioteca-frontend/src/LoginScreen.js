@@ -12,6 +12,7 @@ import { useState } from 'react';
 
 const PUBLIC_URL = process.env.PUBLIC_URL || '';
 
+// tela de login e cadastro de usuarios
 const LoginScreen = ({ onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [form, setForm] = useState({ email: '', senha: '', nome: '' });
@@ -24,6 +25,8 @@ const LoginScreen = ({ onSuccess }) => {
     setError('');
 
     const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
+    
+    // alterna entre endpoint de login ou cadastro
     const endpoint = isLogin ? '/auth/login' : '/auth/cadastro';
 
     try {
@@ -40,9 +43,11 @@ const LoginScreen = ({ onSuccess }) => {
       }
 
       if (isLogin && data.token) {
+        // salva token e notifica componente pai
         localStorage.setItem('acervo_token', data.token);
         onSuccess(data.token);
       } else {
+        // se cadastro bem-sucedido, volta para login
         setIsLogin(true);
         setError('');
         alert('Cadastro realizado com sucesso! Faça login para continuar.');
