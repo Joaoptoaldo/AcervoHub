@@ -14,6 +14,7 @@ Para a documentação completa, consulte os links abaixo:
 - [Documentação de Autenticação](docs/auth.md)
 - [Arquitetura e Modelo de Dados](docs/architecture.md)
 - [Deploy e Variáveis de Ambiente](docs/deploy.md)
+- [Testes](docs/testing.md)
 
 ## Funcionalidades atuais
 
