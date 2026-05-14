@@ -379,8 +379,6 @@ function App() {
           <Box
             sx={{
               display: 'flex',
-              alignItems: 'center',
-              gap: 2.5,
               flexDirection: { xs: 'column-reverse', sm: 'row' },
               alignItems: { xs: 'flex-end', sm: 'center' },
               gap: { xs: 1, sm: 2.5 },
